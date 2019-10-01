@@ -6,7 +6,6 @@
 //
 
 import Vapor
-import SwiftSoup
 
 final class ServerController {
     
