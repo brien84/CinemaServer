@@ -1,24 +1,21 @@
 //
-//  ServerController.swift
+//  ForumCinemas.swift
 //  App
 //
-//  Created by Marius on 30/09/2019.
+//  Created by Marius on 01/10/2019.
 //
 
 import Vapor
-import SwiftSoup
 
-final class ServerController {
+struct ForumCinemas {
     
     let app: Application
     let logger: Logger
+    let webClient: WebClient
     
     init(on app: Application) throws {
         self.app = app
         self.logger = try app.make(Logger.self)
-    }
-    
-    func start() {
-        
+        self.webClient = try WebClient(on: app)
     }
 }
