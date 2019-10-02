@@ -19,10 +19,10 @@ final class Movie {
     let genre: String?
     let country: String?
     let released: String?
-    let poster: String?
     let plot: String?
+    let poster: String?
     
-    init(id: Int?, localID: String, title: String, originalTitle: String?, runtime: String?, rated: String?, genre: String?, country: String?, released: String?, poster: String?, plot: String?) {
+    init(id: Int?, localID: String, title: String, originalTitle: String?, runtime: String?, rated: String?, genre: String?, country: String?, released: String?, plot: String?, poster: String?) {
         
         self.id = id
         self.localID = localID
@@ -33,8 +33,8 @@ final class Movie {
         self.genre = genre
         self.country = country
         self.released = released
-        self.poster = poster
         self.plot = plot
+        self.poster = poster
     }
 }
 
