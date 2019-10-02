@@ -13,20 +13,24 @@ extension String {
         do {
             let regex = try NSRegularExpression(pattern: regex)
             let results = regex.matches(in: self, range: NSRange(self.startIndex..., in: self))
-            
             guard let match = results.first else { return nil }
             
             return Range(match.range, in: self).map { String(self[$0]) }
         } catch {
-            print("find(regex, in text): \(error.localizedDescription)")
+            print("String.findRegex: \(error.localizedDescription)")
             return nil
         }
+    }
+    
+    func afterColon() -> String? {
+        return self.components(separatedBy: ": ").last
     }
 }
 
 // MARK: - SwiftSoup
 extension Document {
-    func selectText(with selector: String, lastOccurrence: Bool = false) -> String? {
+    // 
+    func selectText(_ selector: String, lastOccurrence: Bool = false) -> String? {
         guard let elements = try? self.select(selector) else { return nil }
         guard let element = lastOccurrence ? elements.last() : elements.first() else { return nil }
         return try? element.text()
