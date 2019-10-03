@@ -60,7 +60,7 @@ struct ForumCinemas {
             let plot = doc.selectText("div[class='contboxrow']>p")
             
             return Movie(id: nil,
-                         localID: id,
+                         movieID: id,
                          title: title.sanitizeTitle(),
                          originalTitle: originalTitle?.sanitizeTitle(),
                          duration: duration,

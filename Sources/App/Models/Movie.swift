@@ -11,7 +11,7 @@ import Validation
 
 final class Movie {
     var id: Int?
-    let localID: String
+    let movieID: String
     let title: String
     let originalTitle: String?
     let duration: String?
@@ -22,10 +22,10 @@ final class Movie {
     let plot: String?
     let poster: String?
     
-    init(id: Int?, localID: String, title: String, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, country: String?, releaseDate: String?, plot: String?, poster: String?) {
+    init(id: Int?, movieID: String, title: String, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, country: String?, releaseDate: String?, plot: String?, poster: String?) {
         
         self.id = id
-        self.localID = localID
+        self.movieID = movieID
         self.title = title
         self.originalTitle = originalTitle
         self.duration = duration
