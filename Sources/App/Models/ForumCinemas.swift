@@ -10,9 +10,9 @@ import SwiftSoup
 
 struct ForumCinemas {
     
-    let app: Application
-    let logger: Logger
-    let webClient: WebClient
+    private let app: Application
+    private let logger: Logger
+    private let webClient: WebClient
     
     init(on app: Application) throws {
         self.app = app
@@ -46,11 +46,11 @@ struct ForumCinemas {
             
             guard let title = doc.selectText("span[class='movieName']") else { return nil }
             let originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")
-            let runtime = doc.selectText("[id='eventInfoBlock']>*>div>b", lastOccurrence: true)
-            let rated = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertRating()
+            let duration = doc.selectText("[id='eventInfoBlock']>*>div>b", lastOccurrence: true)
+            let ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
             let genre = doc.selectText("[id='eventInfoBlock']>*>[style='margin-top: 10px;']")?.afterColon()
             let country = doc.selectText("[id='eventInfoBlock']>*>*>[style='float: left; margin-right: 20px;']")?.afterColon()
-            let released = doc.selectText("[id='eventInfoBlock']>*>[style='margin-top: 10px;']", lastOccurrence: true)?.afterColon()
+            let releaseDate = doc.selectText("[id='eventInfoBlock']>*>[style='margin-top: 10px;']", lastOccurrence: true)?.afterColon()
             
             var poster: String? = nil
             if let elements = try? doc.select("div[style='width: 97px; height: 146px; overflow: hidden;']>*") {
@@ -63,11 +63,11 @@ struct ForumCinemas {
                          localID: id,
                          title: title.sanitizeTitle(),
                          originalTitle: originalTitle?.sanitizeTitle(),
-                         runtime: runtime,
-                         rated: rated,
+                         duration: duration,
+                         ageRating: ageRating,
                          genre: genre,
                          country: country,
-                         released: released,
+                         releaseDate: releaseDate,
                          plot: plot,
                          poster: poster)
             
@@ -84,7 +84,7 @@ struct ForumCinemas {
 }
 
 extension String {
-    fileprivate func convertRating() -> String? {
+    fileprivate func convertAgeRating() -> String? {
         switch self {
         case "Įvairaus amžiaus žiūrovams":
             return "V"

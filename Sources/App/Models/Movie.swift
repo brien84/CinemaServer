@@ -14,25 +14,25 @@ final class Movie {
     let localID: String
     let title: String
     let originalTitle: String?
-    let runtime: String?
-    let rated: String?
+    let duration: String?
+    let ageRating: String?
     let genre: String?
     let country: String?
-    let released: String?
+    let releaseDate: String?
     let plot: String?
     let poster: String?
     
-    init(id: Int?, localID: String, title: String, originalTitle: String?, runtime: String?, rated: String?, genre: String?, country: String?, released: String?, plot: String?, poster: String?) {
+    init(id: Int?, localID: String, title: String, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, country: String?, releaseDate: String?, plot: String?, poster: String?) {
         
         self.id = id
         self.localID = localID
         self.title = title
         self.originalTitle = originalTitle
-        self.runtime = runtime
-        self.rated = rated
+        self.duration = duration
+        self.ageRating = ageRating
         self.genre = genre
         self.country = country
-        self.released = released
+        self.releaseDate = releaseDate
         self.plot = plot
         self.poster = poster
     }
