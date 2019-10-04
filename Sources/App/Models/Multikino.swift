@@ -9,14 +9,10 @@ import Foundation
 import Vapor
 
 struct Multikino {
-    
-    private let app: Application
-    private let logger: Logger
+
     private let webClient: WebClient
     
     init(on app: Application) throws {
-        self.app = app
-        self.logger = try app.make(Logger.self)
         self.webClient = try WebClient(on: app)
     }
     
@@ -44,6 +40,20 @@ struct Multikino {
             }
         }
     }
+    
+    func getShowings(of movieID: String) -> Future<[Showing]> {
+        return webClient.getHTML(from: "https://multikino.lt/data/showings/\(movieID)/1001").map { html in
+            guard let showingService = try? JSONDecoder().decode(ShowingService.self, from: html) else { throw URLError(.cannotDecodeContentData) }
+
+            return showingService.showings.flatMap { showing -> [Showing] in
+                return showing.times.compactMap { time in
+                    guard let date = time.date.convertToDate() else { return nil }
+                    
+                    return Showing(city: City.vilnius.rawValue, date: date, venue: "Multikino")
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Decodable helpers
@@ -65,7 +75,6 @@ private struct MovieService: Decodable {
         
         private let genres: Genres?
         private let fullTitle: String
-        let localLink: String?
         let showShowings: Bool?
         let movieID: String
         
@@ -99,7 +108,6 @@ private struct MovieService: Decodable {
         private enum CodingKeys: String, CodingKey {
             case genres
             case fullTitle = "title"
-            case localLink = "filmlink"
             case showShowings = "show_showings"
             case movieID = "id"
             case duration = "info_runningtime"
@@ -107,6 +115,18 @@ private struct MovieService: Decodable {
             case releaseDate = "info_release"
             case plot = "synopsis_short"
             case poster = "image_poster"
+        }
+    }
+}
+
+private struct ShowingService: Decodable {
+    let showings: [Showing]
+    
+    struct Showing: Decodable {
+        let times: [Time]
+        
+        struct Time: Decodable {
+            let date: String
         }
     }
 }
