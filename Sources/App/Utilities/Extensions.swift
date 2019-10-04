@@ -25,6 +25,17 @@ extension String {
     func afterColon() -> String? {
         return self.components(separatedBy: ": ").last
     }
+    
+    func convertToDate() -> Date? {
+        let dateFormatter = DateFormatter()
+        
+        dateFormatter.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss"
+        if let date = dateFormatter.date(from: self) {
+            return date
+        }
+        
+        return nil
+    }
 }
 
 // MARK: - SwiftSoup
