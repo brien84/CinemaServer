@@ -29,11 +29,18 @@ extension String {
     func convertToDate() -> Date? {
         let dateFormatter = DateFormatter()
         
-        dateFormatter.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss"
+        // ForumCinemas format: 19.09.2019 11:00
+        dateFormatter.dateFormat = "dd'.'MM'.'yyyy' 'HH':'mm"
         if let date = dateFormatter.date(from: self) {
             return date
         }
         
+        // Multikino format: 2019-09-26T17:30:00
+        dateFormatter.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss"
+        if let date = dateFormatter.date(from: self) {
+            return date
+        }
+    
         return nil
     }
 }
