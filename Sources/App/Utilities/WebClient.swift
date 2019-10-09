@@ -24,4 +24,17 @@ struct WebClient {
             return html
         }
     }
+    
+    func getHTML<T: Content>(from url: String, with formData: T) -> Future<String> {
+        let httpReq = HTTPRequest(method: .POST, url: url)
+        let req = Request(http: httpReq, using: app)
+        try? req.query.encode(formData)
+        
+        return client.send(req).map { response in
+            guard let responseData = response.http.body.data else { throw URLError(.badServerResponse) }
+            guard let html = String(bytes: responseData, encoding: .utf8) else { throw URLError(.badServerResponse) }
+            
+            return html
+        }
+    }
 }
