@@ -51,9 +51,8 @@ extension String {
 // MARK: - SwiftSoup
 extension Document {
     // 
-    func selectText(_ selector: String, lastOccurrence: Bool = false) -> String? {
+    func selectText(_ selector: String) -> String? {
         guard let elements = try? self.select(selector) else { return nil }
-        guard let element = lastOccurrence ? elements.last() : elements.first() else { return nil }
-        return try? element.text()
+        return try? elements.text()
     }
 }
