@@ -11,79 +11,170 @@ import SwiftSoup
 struct ForumCinemas {
     
     private let app: Application
-    private let logger: Logger
     private let webClient: WebClient
     
     init(on app: Application) throws {
         self.app = app
-        self.logger = try app.make(Logger.self)
         self.webClient = try WebClient(on: app)
     }
     
-    func getMovies() -> Future<[Movie?]> {
-        return getMovieIDs().flatMap { ids in
-            return ids.compactMap {
+    func getMovies() -> Future<[Movie]> {
+        return getRequestForms().flatMap { forms in
+            
+            let futureShowings = forms.map { form in
+                self.getShowings(with: form)
+            }.flatten(on: self.app).map { $0.flatMap { $0 } }
+            
+            return futureShowings.flatMap { showings in
+                let movies = self.createMovies(from: showings)
                 
-                return self.getMovie($0)
-            }.flatten(on: self.app)
-        }.catchMap { error in
-            throw error
-        }
-    }
-    
-    private func getMovieIDs() -> Future<[String]> {
-        return webClient.getHTML(from: "https://www.forumcinemas.lt/").map { html in
-            guard let doc: Document = try? SwiftSoup.parse(html) else { return [] }
-            guard let items = try? doc.select("select[name='Movies']>option[value]") else { return [] }
-            
-            return items.compactMap { try? $0.attr("value") }
-        }
-    }
-    
-    private func getMovie(_ id: String) -> Future<Movie?> {
-        return webClient.getHTML(from: "http://www.forumcinemas.lt/Event/\(id)/").map { html in
-            guard let doc: Document = try? SwiftSoup.parse(html) else { return nil }
-            
-            guard let title = doc.selectText("span[class='movieName']") else { return nil }
-            let originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")
-            let duration = doc.selectText("[id='eventInfoBlock']>*>div>b", lastOccurrence: true)
-            let ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
-            let genre = doc.selectText("[id='eventInfoBlock']>*>[style='margin-top: 10px;']")?.afterColon()
-            let country = doc.selectText("[id='eventInfoBlock']>*>*>[style='float: left; margin-right: 20px;']")?.afterColon()
-            let releaseDate = doc.selectText("[id='eventInfoBlock']>*>[style='margin-top: 10px;']", lastOccurrence: true)?.afterColon()
-            
-            var poster: String? = nil
-            if let elements = try? doc.select("div[style='width: 97px; height: 146px; overflow: hidden;']>*") {
-                poster = try? elements.attr("src")
+                let futureMovies = movies.map { movie in
+                    self.update(movie)
+                }.flatten(on: self.app).map { $0.compactMap { $0 } }
+                
+                return futureMovies
             }
-            
-            let plot = doc.selectText("div[class='contboxrow']>p")
-            
-            return Movie(id: nil,
-                         movieID: id,
-                         title: title.sanitizeTitle(),
-                         originalTitle: originalTitle?.sanitizeTitle(),
-                         duration: duration,
-                         ageRating: ageRating,
-                         genre: genre,
-                         country: country,
-                         releaseDate: releaseDate,
-                         plot: plot,
-                         poster: poster)
-            
-        }.catchMap { error -> Movie? in
-            if let error = error as? URLError {
-                self.logger.warning("ForumCinemas.getMovie with URL \(String(describing: error.failingURL)): \(error.localizedDescription)")
+        }
+    }
+    
+    ///
+    private func createMovies(from showings: [(movieID: String, showing: Showing)]) -> [Movie] {
+        var result = [Movie]()
+        
+        showings.forEach { showing in
+            if let movie = result.first(where: { $0.movieID == showing.movieID }) {
+                movie.showings.append(showing.showing)
             } else {
-                self.logger.warning("ForumCinemas.getMovie: \(error.localizedDescription)")
+                let newMovie = Movie(movieID: showing.movieID)
+                newMovie.showings.append(showing.showing)
+                result.append(newMovie)
             }
-            
-            return nil
         }
+        
+        return result
+    }
+  
+    ///
+    private func update(_ movie: Movie) -> Future<Movie?> {
+        return webClient.getHTML(from: "http://www.forumcinemas.lt/Event/\(movie.movieID)/").map { html in
+            guard let doc: Document = try? SwiftSoup.parse(html) else { return nil }
+        
+            guard let title = doc.selectText("span[class='movieName']") else { return nil }
+            movie.title = title
+            
+            movie.originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")
+            movie.duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
+            movie.ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
+            movie.country = doc.selectText("[id='eventInfoBlock']>*>*>[style='float: left; margin-right: 20px;']")?.afterColon()
+            movie.plot = doc.selectText("div[class=contboxrow]:not([id])")
+            
+            movie.genre = {
+                guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
+                /// Maps text attributes from elements to an array, then finds text containing our string and returns it.
+                return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Žanras") })?.afterColon()
+            }()
+            
+            movie.releaseDate = {
+                guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
+                /// Maps text attributes from elements to an array, then finds text containing our string and returns it.
+                return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Kino teatruose nuo") })?.afterColon()
+            }()
+            
+            movie.poster = {
+                guard let elements = try? doc.select("div[style='width: 97px; height: 146px; overflow: hidden;']>*") else { return nil }
+                return try? elements.attr("src")
+            }()
+            
+            return movie
+        }.catch { error in
+            print("ForumCinemas.update: \(error)")
+        }
+    }
+    
+    ///
+    private func getShowings(with form: RequestForm) -> Future<[(movieID: String, showing: Showing)]> {
+        return webClient.getHTML(from: "http://www.forumcinemas.lt/", with: form).map { html in
+            guard let doc: Document = try? SwiftSoup.parse(html) else { return [] }
+            guard let items = try? doc.select("div[id*=showtime]") else { return [] }
+            
+            return items.flatMap { item -> [(String, Showing)] in
+                guard let id = try? item.attr("id"), let movieID = id.findRegex(#"(?<=showTimes)\d*"#) else { return [] }
+                
+                return item.children().flatMap { child -> [(String, Showing)] in
+                    guard let venue = try? child.select("div[style]").text().sanitizeVenue() else { return [] }
+                    
+                    return child.children().compactMap { child -> (String, Showing)? in
+                        guard child.hasClass("showTime") else { return nil }
+                        guard let time = try? child.text() else { return nil }
+                        guard let date = "\(form.dt) \(time)".convertToDate() else { return nil }
+                        guard let city = form.theatreArea.convertCity() else { return nil }
+                        
+                        return (movieID: movieID, showing: Showing(city: city, date: date, venue: venue))
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Showing parsing methods
+    
+    private struct RequestForm: Content {
+        let theatreArea: String
+        let dt: String
+    }
+    
+    private enum OptionType {
+        case area
+        case date
+    }
+
+    ///
+    private func getRequestForms() -> Future<[RequestForm]> {
+        return webClient.getHTML(from: "http://www.forumcinemas.lt/").flatMap { html in
+            return self.parseOption(type: .area, from: html).map { area -> Future<[RequestForm]> in
+                ///
+                let requestForm = RequestForm(theatreArea: area, dt: "")
+                
+                return self.webClient.getHTML(from: "http://www.forumcinemas.lt/", with: requestForm).map { html in
+                    return self.parseOption(type: .date, from: html).map { date in
+                        return RequestForm(theatreArea: area, dt: date)
+                    }
+                }.catch { error in
+                    print("ForumCinemas.getRequestForms: \(error)")
+                }
+            }.flatten(on: self.app).map { return $0.flatMap { $0 } }
+        }.catch { error in
+            print("ForumCinemas.getRequestForms: \(error)")
+        }
+    }
+    
+    ///
+    private func parseOption(type: OptionType, from html: String) -> [String] {
+        guard let doc: Document = try? SwiftSoup.parse(html) else { return [] }
+        let selector = type == OptionType.area ? "select[id='area']>option[value]" : "select[name='dt']>option[value]"
+        guard let items = try? doc.select(selector) else { return [] }
+        let values = items.compactMap { try? $0.attr("value") }
+        
+        return values
     }
 }
 
 extension String {
+    fileprivate func convertCity() -> String? {
+        switch self {
+        case "1011":
+            return City.vilnius.rawValue
+        case "1012":
+            return City.kaunas.rawValue
+        case "1014":
+            return City.siauliai.rawValue
+        case "1015":
+            return City.klaipeda.rawValue
+        default:
+            return nil
+        }
+    }
+    
     fileprivate func convertAgeRating() -> String? {
         switch self {
         case "Įvairaus amžiaus žiūrovams":
@@ -101,6 +192,14 @@ extension String {
         }
     }
     
+    fileprivate func sanitizeVenue() -> String {
+        return self
+            .replacingOccurrences(of: " (Vilniuje)", with: "")
+            .replacingOccurrences(of: " Kaune", with: "")
+            .replacingOccurrences(of: " Klaipėdoje", with: "")
+            .replacingOccurrences(of: " Šiauliuose", with: "")
+    }
+    
     fileprivate func sanitizeTitle() -> String {
         return self
             .replacingOccurrences(of: " (dubbed)", with: "")
@@ -109,5 +208,6 @@ extension String {
             .replacingOccurrences(of: " 3D", with: "")
             .replacingOccurrences(of: "LNK Kino Startas: ", with: "")
             .replacingOccurrences(of: "POWER HIT RADIO premjera: ", with: "")
+            .replacingOccurrences(of: "ZIP FM premjera: ", with: "")
     }
 }
