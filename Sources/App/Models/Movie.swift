@@ -9,20 +9,22 @@ import Vapor
 import FluentSQLite
 import Validation
 
-final class Movie {
+final class Movie: CustomDebugStringConvertible {
     var id: Int?
     let movieID: String
-    let title: String
-    let originalTitle: String?
-    let duration: String?
-    let ageRating: String?
-    let genre: String?
-    let country: String?
-    let releaseDate: String?
-    let plot: String?
-    let poster: String?
+    var title: String?
+    var originalTitle: String?
+    var duration: String?
+    var ageRating: String?
+    var genre: String?
+    var country: String?
+    var releaseDate: String?
+    var plot: String?
+    var poster: String?
     
-    init(id: Int?, movieID: String, title: String, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, country: String?, releaseDate: String?, plot: String?, poster: String?) {
+    var showings = [Showing]()
+    
+    init(id: Int?, movieID: String, title: String?, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, country: String?, releaseDate: String?, plot: String?, poster: String?) {
         
         self.id = id
         self.movieID = movieID
@@ -35,6 +37,27 @@ final class Movie {
         self.releaseDate = releaseDate
         self.plot = plot
         self.poster = poster
+    }
+    
+    convenience init(movieID: String) {
+        self.init(id: nil, movieID: movieID, title: nil, originalTitle: nil, duration: nil, ageRating: nil, genre: nil, country: nil, releaseDate: nil, plot: nil, poster: nil)
+    }
+    
+    var debugDescription: String {
+        return """
+        ---
+        \(movieID)
+        \(title)
+        \(originalTitle)
+        \(duration)
+        \(ageRating)
+        \(genre)
+        \(country)
+        \(releaseDate)
+        \(plot)
+        \(poster)
+        \(showings)
+        """
     }
 }
 
