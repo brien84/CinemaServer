@@ -12,10 +12,13 @@ struct ForumCinemas {
     
     private let app: Application
     private let webClient: WebClient
+    private let logger: Logger
     
     init(on app: Application) throws {
         self.app = app
         self.webClient = try WebClient(on: app)
+        
+        self.logger = try app.make(Logger.self)
     }
     
     func getMovies() -> Future<[Movie]> {
@@ -87,7 +90,7 @@ struct ForumCinemas {
             
             return movie
         }.catch { error in
-            print("ForumCinemas.update: \(error)")
+            self.logger.warning("ForumCinemas.update: \(error)")
         }
     }
     
@@ -130,7 +133,7 @@ struct ForumCinemas {
 
     ///
     private func getRequestForms() -> Future<[RequestForm]> {
-        return webClient.getHTML(from: "http://www.forumcinemas.lt/").flatMap { html in
+        return webClient.getHTML(from: "ddd").flatMap { html in
             return self.parseOption(type: .area, from: html).map { area -> Future<[RequestForm]> in
                 ///
                 let requestForm = RequestForm(theatreArea: area, dt: "")
@@ -140,11 +143,11 @@ struct ForumCinemas {
                         return RequestForm(theatreArea: area, dt: date)
                     }
                 }.catch { error in
-                    print("ForumCinemas.getRequestForms: \(error)")
+                    self.logger.warning("ForumCinemas.getRequestForms: \(error)")
                 }
             }.flatten(on: self.app).map { return $0.flatMap { $0 } }
         }.catch { error in
-            print("ForumCinemas.getRequestForms: \(error)")
+            self.logger.warning("ForumCinemas.getRequestForms: \(error)")
         }
     }
     
