@@ -17,7 +17,6 @@ struct ForumCinemas {
     init(on app: Application) throws {
         self.app = app
         self.webClient = try WebClient(on: app)
-        
         self.logger = try app.make(Logger.self)
     }
     

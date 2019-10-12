@@ -11,47 +11,42 @@ import Vapor
 struct Multikino {
 
     private let webClient: WebClient
+    private let logger: Logger
     
     init(on app: Application) throws {
         self.webClient = try WebClient(on: app)
+        self.logger = try app.make(Logger.self)
     }
     
+    ///
     func getMovies() -> Future<[Movie]> {
         return webClient.getHTML(from: "https://multikino.lt/data/filmswithshowings/1001").map { html in
-            
             guard let movieService = try? JSONDecoder().decode(MovieService.self, from: html) else { throw URLError(.cannotDecodeContentData) }
-            
+
             return movieService.movies.compactMap { movie -> Movie? in
+                
                 if movie.showShowings == true {
-                    return Movie(id: nil,
-                                 movieID: movie.movieID,
-                                 title: movie.title.sanitizeTitle(),
-                                 originalTitle: movie.originalTitle,
-                                 duration: movie.duration,
-                                 ageRating: movie.ageRating,
-                                 genre: movie.genre,
-                                 country: nil,
-                                 releaseDate: movie.releaseDate,
-                                 plot: movie.plot,
-                                 poster: movie.poster)
+                    let showings = movie.showings.flatMap { showing -> [Showing] in
+                        return showing.times.compactMap { time in
+                            guard let date = time.date.convertToDate() else { return nil }
+                            
+                            return Showing(city: City.vilnius.rawValue, date: date, venue: "Multikino")
+                        }
+                    }
+                    
+                    let newMovie = Movie(id: nil, movieID: movie.movieID, title: movie.title.sanitizeTitle(), originalTitle: movie.originalTitle,
+                                         duration: movie.duration, ageRating: movie.ageRating, genre: movie.genre, country: nil,
+                                         releaseDate: movie.releaseDate, plot: movie.plot, poster: movie.poster)
+                    
+                    newMovie.showings.append(contentsOf: showings)
+                    
+                    return newMovie
                 } else {
                     return nil
                 }
             }
-        }
-    }
-    
-    func getShowings(of movieID: String) -> Future<[Showing]> {
-        return webClient.getHTML(from: "https://multikino.lt/data/showings/\(movieID)/1001").map { html in
-            guard let showingService = try? JSONDecoder().decode(ShowingService.self, from: html) else { throw URLError(.cannotDecodeContentData) }
-
-            return showingService.showings.flatMap { showing -> [Showing] in
-                return showing.times.compactMap { time in
-                    guard let date = time.date.convertToDate() else { return nil }
-                    
-                    return Showing(city: City.vilnius.rawValue, date: date, venue: "Multikino")
-                }
-            }
+        }.catch { error in
+            self.logger.warning("Multikino.getMovies: \(error)")
         }
     }
 }
@@ -66,18 +61,9 @@ private struct MovieService: Decodable {
     }
     
     struct Movie: Decodable {
-        private struct Genres: Decodable {
-            let names: [Genre]
-            struct Genre: Decodable {
-                let name: String
-            }
-        }
-        
-        private let genres: Genres?
-        private let fullTitle: String
-        let showShowings: Bool?
         let movieID: String
-        
+        private let fullTitle: String
+
         var title: String {
             return fullTitle.findRegex(#"^.*?(?=\s\()"#) ?? fullTitle
         }
@@ -90,14 +76,25 @@ private struct MovieService: Decodable {
         
         let duration: String?
         let ageRating: String?
+    
+        private struct Genres: Decodable {
+            let names: [Genre]
+            struct Genre: Decodable {
+                let name: String
+            }
+        }
+        
+        private let genres: Genres?
         
         var genre: String? {
             guard let genres = genres else { return nil }
+            
             var genre = ""
             genres.names.forEach {
                 genre.append(contentsOf: "\($0.name), ")
             }
             genre = String(genre.dropLast(2))
+            
             return genre
         }
         
@@ -105,28 +102,28 @@ private struct MovieService: Decodable {
         let plot: String?
         let poster: String?
         
+        struct Showing: Decodable {
+            let times: [Time]
+            
+            struct Time: Decodable {
+                let date: String
+            }
+        }
+        
+        let showings: [Showing]
+        let showShowings: Bool?
+        
         private enum CodingKeys: String, CodingKey {
-            case genres
-            case fullTitle = "title"
-            case showShowings = "show_showings"
             case movieID = "id"
+            case fullTitle = "title"
             case duration = "info_runningtime"
             case ageRating = "info_age"
+            case genres
             case releaseDate = "info_release"
             case plot = "synopsis_short"
             case poster = "image_poster"
-        }
-    }
-}
-
-private struct ShowingService: Decodable {
-    let showings: [Showing]
-    
-    struct Showing: Decodable {
-        let times: [Time]
-        
-        struct Time: Decodable {
-            let date: String
+            case showings
+            case showShowings = "show_showings"
         }
     }
 }
