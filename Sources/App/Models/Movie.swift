@@ -9,7 +9,7 @@ import Vapor
 import FluentSQLite
 import Validation
 
-final class Movie: CustomDebugStringConvertible {
+final class Movie {
     var id: Int?
     let movieID: String
     var title: String?
@@ -41,23 +41,6 @@ final class Movie: CustomDebugStringConvertible {
     
     convenience init(movieID: String) {
         self.init(id: nil, movieID: movieID, title: nil, originalTitle: nil, duration: nil, ageRating: nil, genre: nil, country: nil, releaseDate: nil, plot: nil, poster: nil)
-    }
-    
-    var debugDescription: String {
-        return """
-        ---
-        \(movieID)
-        \(title)
-        \(originalTitle)
-        \(duration)
-        \(ageRating)
-        \(genre)
-        \(country)
-        \(releaseDate)
-        \(plot)
-        \(poster)
-        \(showings)
-        """
     }
 }
 

@@ -46,12 +46,12 @@ struct Multikino {
                 }
             }
         }.catch { error in
-            self.logger.warning("Multikino.getMovies: \(error)")
+            self.logger.warning("getMovies: \(error)")
         }
     }
 }
 
-// MARK: - Decodable helpers
+// MARK: - Decodable helper
 
 private struct MovieService: Decodable {
     let movies: [Movie]

@@ -8,7 +8,7 @@
 import Vapor
 import FluentSQLite
 
-// TODO: FIX LOGGER MESSAGES
+// TODO: DOCUMENTATION
 
 final class ServerController {
     
@@ -36,6 +36,7 @@ final class ServerController {
     private func update() {
         self.logger.info("Update is starting!")
         
+        //
         let futureTransaction = conn.transaction(on: .sqlite) { conn -> Future<Void> in
             return Movie.query(on: self.conn).delete().flatMap {
                 return self.getMovies().flatMap { movies in
@@ -47,9 +48,9 @@ final class ServerController {
         }
 
         futureTransaction.do { _ in
-            print("Update completed!")
+            self.logger.info("Update is complete!")
         }.catch { error in
-            print(error)
+            self.logger.warning("update: \(error)")
         }
     }
     
@@ -59,8 +60,9 @@ final class ServerController {
                 
                 var movies = forumMovies
                 
+                //
                 multiMovies.forEach { multiMovie in
-                    if let movie = movies.first(where: { $0.title?.lowercased() == multiMovie.title?.lowercased() } ) {
+                    if let movie = movies.first(where: { $0.title?.lowercased() == multiMovie.title?.lowercased() }) {
                         movie.showings.append(contentsOf: multiMovie.showings)
                     } else {
                         movies.append(multiMovie)

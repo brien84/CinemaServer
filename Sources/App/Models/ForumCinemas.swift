@@ -72,13 +72,13 @@ struct ForumCinemas {
             
             movie.genre = {
                 guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
-                /// Maps text attributes from elements to an array, then finds text containing our string and returns it.
+                // Maps text attributes from elements to an array, then finds text containing our string and returns it.
                 return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Žanras") })?.afterColon()
             }()
             
             movie.releaseDate = {
                 guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
-                /// Maps text attributes from elements to an array, then finds text containing our string and returns it.
+                // Maps text attributes from elements to an array, then finds text containing our string and returns it.
                 return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Kino teatruose nuo") })?.afterColon()
             }()
             
@@ -89,7 +89,7 @@ struct ForumCinemas {
             
             return movie
         }.catch { error in
-            self.logger.warning("ForumCinemas.update: \(error)")
+            self.logger.warning("update: \(error)")
         }
     }
     
@@ -134,7 +134,7 @@ struct ForumCinemas {
     private func getRequestForms() -> Future<[RequestForm]> {
         return webClient.getHTML(from: "http://www.forumcinemas.lt/").flatMap { html in
             return self.parseOption(type: .area, from: html).map { area -> Future<[RequestForm]> in
-                ///
+                //
                 let requestForm = RequestForm(theatreArea: area, dt: "")
                 
                 return self.webClient.getHTML(from: "http://www.forumcinemas.lt/", with: requestForm).map { html in
@@ -142,11 +142,11 @@ struct ForumCinemas {
                         return RequestForm(theatreArea: area, dt: date)
                     }
                 }.catch { error in
-                    self.logger.warning("ForumCinemas.getRequestForms: \(error)")
+                    self.logger.warning("getRequestForms: \(error)")
                 }
             }.flatten(on: self.app).map { return $0.flatMap { $0 } }
         }.catch { error in
-            self.logger.warning("ForumCinemas.getRequestForms: \(error)")
+            self.logger.warning("getRequestForms: \(error)")
         }
     }
     

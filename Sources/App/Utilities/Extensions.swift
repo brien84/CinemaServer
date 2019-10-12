@@ -50,7 +50,7 @@ extension String {
 
 // MARK: - SwiftSoup
 extension Document {
-    // 
+    ///
     func selectText(_ selector: String) -> String? {
         guard let elements = try? self.select(selector) else { return nil }
         return try? elements.text()
