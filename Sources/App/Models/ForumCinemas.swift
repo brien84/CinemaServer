@@ -62,7 +62,7 @@ struct ForumCinemas {
             guard let doc: Document = try? SwiftSoup.parse(html) else { return nil }
         
             guard let title = doc.selectText("span[class='movieName']") else { return nil }
-            movie.title = title
+            movie.title = title.sanitizeTitle()
             
             movie.originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")
             movie.duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
