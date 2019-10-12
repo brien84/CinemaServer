@@ -15,7 +15,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     let directoryConfig = DirectoryConfig.detect()
     let database = try SQLiteDatabase(storage: .file(path: "\(directoryConfig.workDir)movies.db"))
     
-    // Register the configured SQLite database to the database config.
+    // Register the configured SQLite database to the database config
     var databases = DatabasesConfig()
     databases.add(database: database, as: .sqlite)
     services.register(databases)

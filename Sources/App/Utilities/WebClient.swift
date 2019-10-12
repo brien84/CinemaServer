@@ -25,6 +25,7 @@ struct WebClient {
         }
     }
     
+    ///
     func getHTML<T: Content>(from url: String, with formData: T) -> Future<String> {
         let httpReq = HTTPRequest(method: .POST, url: url)
         let req = Request(http: httpReq, using: app)

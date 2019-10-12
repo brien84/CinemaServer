@@ -8,8 +8,6 @@
 import Vapor
 import FluentSQLite
 
-// TODO: DOCUMENTATION
-
 final class ServerController {
     
     private let app: Application
@@ -36,7 +34,7 @@ final class ServerController {
     private func update() {
         self.logger.info("Update is starting!")
         
-        //
+        // Transaction executes only if all futures return successfully!
         let futureTransaction = conn.transaction(on: .sqlite) { conn -> Future<Void> in
             return Movie.query(on: self.conn).delete().flatMap {
                 return self.getMovies().flatMap { movies in
@@ -60,11 +58,13 @@ final class ServerController {
                 
                 var movies = forumMovies
                 
-                //
                 multiMovies.forEach { multiMovie in
+                    // If movie with the same title as multiMovie is found in forumMovies...
                     if let movie = movies.first(where: { $0.title?.lowercased() == multiMovie.title?.lowercased() }) {
+                        // add multiMovie's showings to forumMovie
                         movie.showings.append(contentsOf: multiMovie.showings)
                     } else {
+                        // add multiMovie to forumMovies
                         movies.append(multiMovie)
                     }
                 }

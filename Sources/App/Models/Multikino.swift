@@ -18,7 +18,11 @@ struct Multikino {
         self.logger = try app.make(Logger.self)
     }
     
-    ///
+    /**
+     Decodes JSON from Multikino API to Movie info.
+     
+     - Returns: Array of Movie.
+     */
     func getMovies() -> Future<[Movie]> {
         return webClient.getHTML(from: "https://multikino.lt/data/filmswithshowings/1001").map { html in
             guard let movieService = try? JSONDecoder().decode(MovieService.self, from: html) else { throw URLError(.cannotDecodeContentData) }

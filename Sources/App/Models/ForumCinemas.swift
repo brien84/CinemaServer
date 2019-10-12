@@ -39,28 +39,15 @@ struct ForumCinemas {
         }
     }
     
-    ///
-    private func createMovies(from showings: [(movieID: String, showing: Showing)]) -> [Movie] {
-        var result = [Movie]()
-        
-        showings.forEach { showing in
-            if let movie = result.first(where: { $0.movieID == showing.movieID }) {
-                movie.showings.append(showing.showing)
-            } else {
-                let newMovie = Movie(movieID: showing.movieID)
-                newMovie.showings.append(showing.showing)
-                result.append(newMovie)
-            }
-        }
-        
-        return result
-    }
-  
-    ///
+    /**
+     Sends request with MovieID and parses rest of Movie info.
+     
+     - Returns: Movie or nil if parsing was unsuccessful.
+     */
     private func update(_ movie: Movie) -> Future<Movie?> {
         return webClient.getHTML(from: "http://www.forumcinemas.lt/Event/\(movie.movieID)/").map { html in
             guard let doc: Document = try? SwiftSoup.parse(html) else { return nil }
-        
+            
             guard let title = doc.selectText("span[class='movieName']") else { return nil }
             movie.title = title.sanitizeTitle()
             
@@ -93,7 +80,32 @@ struct ForumCinemas {
         }
     }
     
-    ///
+    /**
+     Reduces movieID and showing tuples to Movies.
+     
+     - Returns: Array of Movie, which only contain MovieID and Showings.
+     */
+    private func createMovies(from showings: [(movieID: String, showing: Showing)]) -> [Movie] {
+        var result = [Movie]()
+        
+        showings.forEach { showing in
+            if let movie = result.first(where: { $0.movieID == showing.movieID }) {
+                movie.showings.append(showing.showing)
+            } else {
+                let newMovie = Movie(movieID: showing.movieID)
+                newMovie.showings.append(showing.showing)
+                result.append(newMovie)
+            }
+        }
+        
+        return result
+    }
+    
+    /**
+     Sends RequestForm to host and parses response to get Showings and their corresponding movieIDs.
+     
+     - Returns: Array of tuple containing Showing and Showing's movieID.
+     */
     private func getShowings(with form: RequestForm) -> Future<[(movieID: String, showing: Showing)]> {
         return webClient.getHTML(from: "http://www.forumcinemas.lt/", with: form).map { html in
             guard let doc: Document = try? SwiftSoup.parse(html) else { return [] }
@@ -130,11 +142,15 @@ struct ForumCinemas {
         case date
     }
 
-    ///
+    /**
+    Parses area options from ForumCinemas homepage, then loops through each area and parses dates.
+     
+    - Returns: RequestForm array with every area and date combination.
+    */
     private func getRequestForms() -> Future<[RequestForm]> {
         return webClient.getHTML(from: "http://www.forumcinemas.lt/").flatMap { html in
             return self.parseOption(type: .area, from: html).map { area -> Future<[RequestForm]> in
-                //
+                // Date is empty, because only area options are currently available
                 let requestForm = RequestForm(theatreArea: area, dt: "")
                 
                 return self.webClient.getHTML(from: "http://www.forumcinemas.lt/", with: requestForm).map { html in
@@ -150,7 +166,6 @@ struct ForumCinemas {
         }
     }
     
-    ///
     private func parseOption(type: OptionType, from html: String) -> [String] {
         guard let doc: Document = try? SwiftSoup.parse(html) else { return [] }
         let selector = type == OptionType.area ? "select[id='area']>option[value]" : "select[name='dt']>option[value]"
