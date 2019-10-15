@@ -51,7 +51,7 @@ struct ForumCinemas {
             guard let title = doc.selectText("span[class='movieName']") else { return nil }
             movie.title = title.sanitizeTitle()
             
-            movie.originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")
+            movie.originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")?.sanitizeTitle()
             movie.duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
             movie.ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
             movie.country = doc.selectText("[id='eventInfoBlock']>*>*>[style='float: left; margin-right: 20px;']")?.afterColon()

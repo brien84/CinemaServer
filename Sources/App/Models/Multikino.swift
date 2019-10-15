@@ -38,7 +38,7 @@ struct Multikino {
                         }
                     }
                     
-                    let newMovie = Movie(id: nil, movieID: movie.movieID, title: movie.title.sanitizeTitle(), originalTitle: movie.originalTitle,
+                    let newMovie = Movie(id: nil, movieID: movie.movieID, title: movie.title.sanitizeTitle(), originalTitle: movie.originalTitle?.sanitizeTitle(),
                                          duration: movie.duration, ageRating: movie.ageRating, genre: movie.genre, country: nil,
                                          releaseDate: movie.releaseDate, plot: movie.plot, poster: movie.poster)
                     
