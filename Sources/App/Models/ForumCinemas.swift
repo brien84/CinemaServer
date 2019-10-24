@@ -226,5 +226,6 @@ extension String {
             .replacingOccurrences(of: "LNK Kino Startas: ", with: "")
             .replacingOccurrences(of: "POWER HIT RADIO premjera: ", with: "")
             .replacingOccurrences(of: "ZIP FM premjera: ", with: "")
+            .replacingOccurrences(of: "TV3 premjera: ", with: "")
     }
 }

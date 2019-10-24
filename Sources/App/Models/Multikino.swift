@@ -137,5 +137,6 @@ extension String {
         return self
             .replacingOccurrences(of: "MultiBabyKino: ", with: "")
             .replacingOccurrences(of: "MultiKinukas: ", with: "")
+            .replacingOccurrences(of: "Multikinukas: ", with: "")
     }
 }
