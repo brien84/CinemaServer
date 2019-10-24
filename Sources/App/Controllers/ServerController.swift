@@ -27,7 +27,7 @@ final class ServerController {
     }
     
     func start() {
-        app.eventLoop.scheduleTask(in: TimeAmount.seconds(3600), start)
+        app.eventLoop.scheduleTask(in: TimeAmount.seconds(43200), start)
         update()
     }
     
