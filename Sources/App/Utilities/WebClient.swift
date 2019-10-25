@@ -25,7 +25,7 @@ struct WebClient {
         }
     }
     
-    ///
+    /// Sends a server POST request with the specified data encoded as form data.
     func getHTML<T: Content>(from url: String, with formData: T) -> Future<String> {
         let httpReq = HTTPRequest(method: .POST, url: url)
         let req = Request(http: httpReq, using: app)
