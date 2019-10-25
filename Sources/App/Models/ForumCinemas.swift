@@ -222,10 +222,10 @@ extension String {
             .replacingOccurrences(of: " (dubbed)", with: "")
             .replacingOccurrences(of: " (dubliuotas)", with: "")
             .replacingOccurrences(of: " (OV)", with: "")
-            .replacingOccurrences(of: " 3D", with: "")
             .replacingOccurrences(of: "LNK Kino Startas: ", with: "")
             .replacingOccurrences(of: "POWER HIT RADIO premjera: ", with: "")
             .replacingOccurrences(of: "ZIP FM premjera: ", with: "")
             .replacingOccurrences(of: "TV3 premjera: ", with: "")
+            .replacingOccurrences(of: "POWER HIT RADIO premiere: ", with: "")
     }
 }
