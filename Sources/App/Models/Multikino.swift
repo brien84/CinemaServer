@@ -25,110 +25,118 @@ struct Multikino {
      */
     func getMovies() -> Future<[Movie]> {
         return webClient.getHTML(from: "https://multikino.lt/data/filmswithshowings/1001").map { html in
-            guard let movieService = try? JSONDecoder().decode(MovieService.self, from: html) else { throw URLError(.cannotDecodeContentData) }
+            
+            let multiService = try JSONDecoder().decode(MultikinoService.self, from: html)
 
-            return movieService.movies.compactMap { movie -> Movie? in
-                
-                if movie.showShowings == true {
-                    let showings = movie.showings.flatMap { showing -> [Showing] in
-                        return showing.times.compactMap { time in
-                            guard let date = time.date.convertToDate() else { return nil }
-                            
-                            return Showing(city: City.vilnius.rawValue, date: date, venue: "Multikino")
-                        }
-                    }
-                    
-                    let newMovie = Movie(id: nil, movieID: movie.movieID, title: movie.title.sanitizeTitle(), originalTitle: movie.originalTitle?.sanitizeTitle(),
-                                         duration: movie.duration, ageRating: movie.ageRating, genre: movie.genre, country: nil,
-                                         releaseDate: movie.releaseDate, plot: movie.plot, poster: movie.poster)
-                    
-                    newMovie.showings.append(contentsOf: showings)
-                    
-                    return newMovie
-                } else {
-                    return nil
-                }
+            return multiService.movies.compactMap { movie in
+                return Movie(from: movie)
             }
+            
         }.catch { error in
-            self.logger.warning("getMovies: \(error)")
+            self.logger.warning("Multikino.getMovies: \(error)")
         }
     }
 }
 
-// MARK: - Decodable helper
+extension Movie {
+    fileprivate convenience init?(from movie: MultikinoService.MultikinoMovie) {
 
-private struct MovieService: Decodable {
-    let movies: [Movie]
+        guard movie.showShowings == true else { return nil }
+
+        let title = movie.title.findRegex(#"^.*?(?=\s\()"#) ?? movie.title
+
+        guard let originalTitle: String = {
+            guard let year = movie.releaseDate.split(separator: ".").last else { return nil }
+            let title = movie.title.findRegex(#"(?<=\()(.*?)(?=\))"#) ?? movie.title
+            return "\(title) (\(year))"
+        }() else { return nil }
+        
+        let genre: String = {
+            let genre = movie.genres.names.reduce(into: "") { result, genre in
+                result.append(contentsOf: "\(genre), ")
+            }
+            
+            return String(genre.dropLast(2))
+        }()
+        
+        let showings = movie.showings.flatMap { showing in
+            return showing.times.compactMap { time in
+                return Showing(from: time)
+            }
+        }
+        
+        self.init(id: nil,
+                  movieID: "",
+                  title: title.sanitizeTitle(),
+                  originalTitle: originalTitle.sanitizeTitle(),
+                  duration: movie.duration,
+                  ageRating: movie.ageRating,
+                  genre: genre,
+                  country: nil,
+                  releaseDate: movie.releaseDate,
+                  plot: movie.plot,
+                  poster: movie.poster,
+                  showings: showings)
+    }
+}
+
+extension Showing {
+    fileprivate init?(from time: MultikinoService.MultikinoMovie.MultikinoShowing.Time) {
+        guard let date = time.date.convertToDate() else { return nil }
+        
+        self.init(city: City.vilnius.rawValue, date: date, venue: "Multikino")
+    }
+}
+
+private struct MultikinoService: Decodable {
+    
+    let movies: [MultikinoMovie]
     
     private enum CodingKeys: String, CodingKey {
         case movies = "films"
     }
     
-    struct Movie: Decodable {
-        let movieID: String
-        private let fullTitle: String
-
-        var title: String {
-            return fullTitle.findRegex(#"^.*?(?=\s\()"#) ?? fullTitle
-        }
+    struct MultikinoMovie: Decodable {
         
-        var originalTitle: String? {
-            guard let year = releaseDate?.split(separator: ".").last else { return nil }
-            let title = fullTitle.findRegex(#"(?<=\()(.*?)(?=\))"#) ?? fullTitle
-            return "\(title) (\(year))"
-        }
+        let title: String
+        let duration: String
+        let ageRating: String
+        let releaseDate: String
+        let plot: String?
+        let poster: String
+        let genres: Genres
+        let showShowings: Bool
+        let showings: [MultikinoShowing]
         
-        let duration: String?
-        let ageRating: String?
-    
-        private struct Genres: Decodable {
+        struct Genres: Decodable {
             let names: [Genre]
+            
             struct Genre: Decodable {
                 let name: String
             }
         }
         
-        private let genres: Genres?
-        
-        var genre: String? {
-            guard let genres = genres else { return nil }
-            
-            var genre = ""
-            genres.names.forEach {
-                genre.append(contentsOf: "\($0.name), ")
-            }
-            genre = String(genre.dropLast(2))
-            
-            return genre
-        }
-        
-        let releaseDate: String?
-        let plot: String?
-        let poster: String?
-        
-        struct Showing: Decodable {
+        struct MultikinoShowing: Decodable {
             let times: [Time]
             
             struct Time: Decodable {
+                let screen_type: String
                 let date: String
             }
         }
         
-        let showings: [Showing]
-        let showShowings: Bool?
-        
         private enum CodingKeys: String, CodingKey {
-            case movieID = "id"
-            case fullTitle = "title"
+            case title
             case duration = "info_runningtime"
             case ageRating = "info_age"
-            case genres
             case releaseDate = "info_release"
             case plot = "synopsis_short"
             case poster = "image_poster"
-            case showings
+            case genres
             case showShowings = "show_showings"
+            case showings
         }
+        
     }
 }
 

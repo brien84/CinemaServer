@@ -21,10 +21,9 @@ final class Movie {
     var releaseDate: String?
     var plot: String?
     var poster: String?
+    var showings: [Showing]
     
-    var showings = [Showing]()
-    
-    init(id: Int?, movieID: String, title: String?, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, country: String?, releaseDate: String?, plot: String?, poster: String?) {
+    init(id: Int?, movieID: String, title: String?, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, country: String?, releaseDate: String?, plot: String?, poster: String?, showings: [Showing]) {
         
         self.id = id
         self.movieID = movieID
@@ -37,10 +36,11 @@ final class Movie {
         self.releaseDate = releaseDate
         self.plot = plot
         self.poster = poster
+        self.showings = showings
     }
     
     convenience init(movieID: String) {
-        self.init(id: nil, movieID: movieID, title: nil, originalTitle: nil, duration: nil, ageRating: nil, genre: nil, country: nil, releaseDate: nil, plot: nil, poster: nil)
+        self.init(id: nil, movieID: movieID, title: nil, originalTitle: nil, duration: nil, ageRating: nil, genre: nil, country: nil, releaseDate: nil, plot: nil, poster: nil, showings: [])
     }
 }
 
