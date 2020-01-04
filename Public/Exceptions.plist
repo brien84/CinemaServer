@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ForceUpdate</key>
+	<false/>
+	<key>ForumCinemas</key>
+	<dict>
+		<key>title</key>
+		<dict>
+			<key> (specialusis seansas originalo kalba)</key>
+			<string></string>
+			<key>LNK Kino Startas: </key>
+			<string></string>
+			<key>TAVO VAIKAS premjera: </key>
+			<string></string>
+			<key> (dubliuotas)</key>
+			<string></string>
+			<key> 3D</key>
+			<string></string>
+		</dict>
+		<key>originalTitle</key>
+		<dict>
+			<key>Vtorzheniye 2</key>
+			<string>Attraction 2</string>
+			<key>Frozen 2</key>
+			<string>Frozen II</string>
+			<key>Celle que vous croyez</key>
+			<string>Who You Think I Am</string>
+			<key> (OV)</key>
+			<string></string>
+			<key>LNK Kino Startas: </key>
+			<string></string>
+			<key>LNK premiere: </key>
+			<string></string>
+			<key>Normalios bobos eina OUT: </key>
+			<string></string>
+			<key>TAVO VAIKAS premiere: </key>
+			<string></string>
+			<key> (dubbed)</key>
+			<string></string>
+			<key> 3D</key>
+			<string></string>
+		</dict>
+		<key>year</key>
+		<dict>
+			<key>Spies in Disguise</key>
+			<string>2019</string>
+			<key>The Grudge</key>
+			<string>2020</string>
+		</dict>
+	</dict>
+	<key>Multikino</key>
+	<dict>
+		<key>title</key>
+		<dict>
+			<key>Multikinukas: </key>
+			<string></string>
+			<key>MultiBabyKino: </key>
+			<string></string>
+		</dict>
+		<key>originalTitle</key>
+		<dict>
+			<key>Holop</key>
+			<string>Kholop</string>
+			<key>Politseiskiy s Rublyovki</key>
+			<string>Politseyskiy s Rublyovki. Novogodniy bespredel 2</string>
+			<key>Grudge  2020</key>
+			<string>The Grudge</string>
+			<key>Frozen 2</key>
+			<string>Frozen II</string>
+			<key>Ford vs. Ferrari</key>
+			<string>Ford v Ferrari</string>
+			<key>MultiBabyKino: </key>
+			<string></string>
+		</dict>
+		<key>year</key>
+		<dict>
+			<key>Frozen II</key>
+			<string>2019</string>
+			<key>Jojo Rabbit</key>
+			<string>2019</string>
+			<key>1917</key>
+			<string>2019</string>
+		</dict>
+	</dict>
+</dict>
+</plist>
