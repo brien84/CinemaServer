@@ -49,3 +49,9 @@ extension Movie: SQLiteModel { }
 extension Movie: Migration { }
 
 extension Movie: Content { }
+
+extension Movie: Equatable {
+    static func == (lhs: Movie, rhs: Movie) -> Bool {
+        lhs.originalTitle?.lowercased() == rhs.originalTitle?.lowercased()
+    }
+}
