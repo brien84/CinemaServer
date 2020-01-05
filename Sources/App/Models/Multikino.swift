@@ -28,13 +28,65 @@ struct Multikino {
             
             let multiService = try JSONDecoder().decode(MultikinoService.self, from: html)
 
-            return multiService.movies.compactMap { movie in
+            let futureMovies = multiService.movies.compactMap { movie in
                 return Movie(from: movie)
             }
             
+            var updatedMovies = futureMovies.map { self.executeExceptions(on: $0) }
+            
+            // TODO: Refactor
+            return updatedMovies.compactMap { movie in
+                
+                var moviesWithSameTitle = updatedMovies.filter {
+                    $0.originalTitle == movie.originalTitle
+                }
+                    
+                updatedMovies.removeAll(where: { moviesWithSameTitle.contains($0) })
+                    
+                if moviesWithSameTitle.count > 1 {
+                    let lastMovie = moviesWithSameTitle.popLast()
+                    let showings = moviesWithSameTitle.flatMap { $0.showings }
+                    lastMovie?.showings.append(contentsOf: showings)
+                        
+                    return lastMovie!
+                } else if moviesWithSameTitle.count == 1 {
+                    return movie
+                }
+                    
+                return nil
+            }
+    
         }.catch { error in
             self.logger.warning("Multikino.getMovies: \(error)")
         }
+    }
+}
+
+extension Multikino: DataExceptionable {
+    func executeExceptions(on movie: Movie) -> Movie {
+        guard let exceptions = readExceptions(for: "Multikino") else { return movie }
+        
+        if let titleExceptions = exceptions["title"] as? [String : String] {
+            for (key, value) in titleExceptions {
+                movie.title = movie.title?.replacingOccurrences(of: key, with: value)
+            }
+        }
+        
+        if let originalTitleExceptions = exceptions["originalTitle"] as? [String : String] {
+            for (key, value) in originalTitleExceptions {
+                movie.originalTitle = movie.originalTitle?.replacingOccurrences(of: key, with: value)
+            }
+        }
+        
+        if let yearExceptions = exceptions["year"] as? [String : String] {
+            for (movieTitle, year) in yearExceptions {
+                if movie.originalTitle == movieTitle {
+                    movie.releaseDate = year
+                }
+            }
+        }
+    
+        return movie
     }
 }
 
@@ -45,11 +97,8 @@ extension Movie {
 
         let title = movie.title.findRegex(#"^.*?(?=\s\()"#) ?? movie.title
 
-        guard let originalTitle: String = {
-            guard let year = movie.releaseDate.split(separator: ".").last else { return nil }
-            let title = movie.title.findRegex(#"(?<=\()(.*?)(?=\))"#) ?? movie.title
-            return "\(title) (\(year))"
-        }() else { return nil }
+        let originalTitle = movie.title.findRegex(#"(?<=\()(.*?)(?=\))"#) ?? movie.title
+        let releaseDate = String(movie.releaseDate.split(separator: ".").last ?? "N/A")
         
         let genre: String = {
             let genre = movie.genres.names.reduce(into: "") { result, genre in
@@ -67,13 +116,13 @@ extension Movie {
         
         self.init(id: nil,
                   movieID: "",
-                  title: title.sanitizeTitle(),
-                  originalTitle: originalTitle.sanitizeTitle(),
+                  title: title,
+                  originalTitle: originalTitle,
                   duration: movie.duration,
                   ageRating: movie.ageRating,
                   genre: genre,
                   country: nil,
-                  releaseDate: movie.releaseDate,
+                  releaseDate: releaseDate,
                   plot: movie.plot,
                   poster: movie.poster,
                   showings: showings)
@@ -137,14 +186,5 @@ private struct MultikinoService: Decodable {
             case showings
         }
         
-    }
-}
-
-extension String {
-    fileprivate func sanitizeTitle() -> String {
-        return self
-            .replacingOccurrences(of: "MultiBabyKino: ", with: "")
-            .replacingOccurrences(of: "MultiKinukas: ", with: "")
-            .replacingOccurrences(of: "Multikinukas: ", with: "")
     }
 }
