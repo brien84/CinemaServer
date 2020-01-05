@@ -11,7 +11,6 @@ import Validation
 
 final class Movie {
     var id: Int?
-    let movieID: String
     var title: String?
     var originalTitle: String?
     var duration: String?
@@ -22,10 +21,9 @@ final class Movie {
     var poster: String?
     var showings: [Showing]
     
-    init(id: Int?, movieID: String, title: String?, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, releaseDate: String?, plot: String?, poster: String?, showings: [Showing]) {
+    init(id: Int?, title: String?, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, releaseDate: String?, plot: String?, poster: String?, showings: [Showing]) {
         
         self.id = id
-        self.movieID = movieID
         self.title = title
         self.originalTitle = originalTitle
         self.duration = duration
@@ -35,10 +33,6 @@ final class Movie {
         self.plot = plot
         self.poster = poster
         self.showings = showings
-    }
-    
-    convenience init(movieID: String) {
-        self.init(id: nil, movieID: movieID, title: nil, originalTitle: nil, duration: nil, ageRating: nil, genre: nil, releaseDate: nil, plot: nil, poster: nil, showings: [])
     }
 }
 

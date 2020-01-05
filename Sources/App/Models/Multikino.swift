@@ -115,7 +115,6 @@ extension Movie {
         }
         
         self.init(id: nil,
-                  movieID: "",
                   title: title,
                   originalTitle: originalTitle,
                   duration: movie.duration,

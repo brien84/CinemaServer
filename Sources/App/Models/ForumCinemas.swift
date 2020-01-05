@@ -110,7 +110,7 @@ struct ForumCinemas {
                 return try? elements.attr("src")
             }()
             
-            let movie = Movie(id: nil, movieID: "", title: title, originalTitle: originalTitle, duration: duration, ageRating: ageRating, genre: genre, releaseDate: releaseDate, plot: plot, poster: poster, showings: stub.showings)
+            let movie = Movie(id: nil, title: title, originalTitle: originalTitle, duration: duration, ageRating: ageRating, genre: genre, releaseDate: releaseDate, plot: plot, poster: poster, showings: stub.showings)
             
             return movie
             
