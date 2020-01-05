@@ -97,7 +97,7 @@ struct ForumCinemas {
             }()
             
             // TEMP:
-            let releaseDate = String(originalTitle!.suffix(6).dropLast(1).dropFirst(1))
+            let year = String(originalTitle!.suffix(6).dropLast(1).dropFirst(1))
             
 //            movie.releaseDate = {
 //                guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
@@ -110,7 +110,7 @@ struct ForumCinemas {
                 return try? elements.attr("src")
             }()
             
-            let movie = Movie(id: nil, title: title, originalTitle: originalTitle, duration: duration, ageRating: ageRating, genre: genre, releaseDate: releaseDate, plot: plot, poster: poster, showings: stub.showings)
+            let movie = Movie(id: nil, title: title, originalTitle: originalTitle, duration: duration, ageRating: ageRating, genre: genre, year: year, plot: plot, poster: poster, showings: stub.showings)
             
             return movie
             
@@ -242,7 +242,7 @@ extension ForumCinemas: DataExceptionable {
         if let yearExceptions = exceptions["year"] as? [String : String] {
             for (movieTitle, year) in yearExceptions {
                 if movie.originalTitle == movieTitle {
-                    movie.releaseDate = year
+                    movie.year = year
                 }
             }
         }

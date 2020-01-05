@@ -81,7 +81,7 @@ extension Multikino: DataExceptionable {
         if let yearExceptions = exceptions["year"] as? [String : String] {
             for (movieTitle, year) in yearExceptions {
                 if movie.originalTitle == movieTitle {
-                    movie.releaseDate = year
+                    movie.year = year
                 }
             }
         }
@@ -98,7 +98,7 @@ extension Movie {
         let title = movie.title.findRegex(#"^.*?(?=\s\()"#) ?? movie.title
 
         let originalTitle = movie.title.findRegex(#"(?<=\()(.*?)(?=\))"#) ?? movie.title
-        let releaseDate = String(movie.releaseDate.split(separator: ".").last ?? "N/A")
+        let year = String(movie.year.split(separator: ".").last ?? "N/A")
         
         let genre: String = {
             let genre = movie.genres.names.reduce(into: "") { result, genre in
@@ -120,7 +120,7 @@ extension Movie {
                   duration: movie.duration,
                   ageRating: movie.ageRating,
                   genre: genre,
-                  releaseDate: releaseDate,
+                  year: year,
                   plot: movie.plot,
                   poster: movie.poster,
                   showings: showings)
@@ -148,7 +148,7 @@ private struct MultikinoService: Decodable {
         let title: String
         let duration: String
         let ageRating: String
-        let releaseDate: String
+        let year: String
         let plot: String?
         let poster: String
         let genres: Genres
@@ -176,7 +176,7 @@ private struct MultikinoService: Decodable {
             case title
             case duration = "info_runningtime"
             case ageRating = "info_age"
-            case releaseDate = "info_release"
+            case year = "info_release"
             case plot = "synopsis_short"
             case poster = "image_poster"
             case genres

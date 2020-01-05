@@ -16,12 +16,12 @@ final class Movie {
     var duration: String?
     var ageRating: String?
     var genre: String?
-    var releaseDate: String?
+    var year: String?
     var plot: String?
     var poster: String?
     var showings: [Showing]
     
-    init(id: Int?, title: String?, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, releaseDate: String?, plot: String?, poster: String?, showings: [Showing]) {
+    init(id: Int?, title: String?, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, year: String?, plot: String?, poster: String?, showings: [Showing]) {
         
         self.id = id
         self.title = title
@@ -29,7 +29,7 @@ final class Movie {
         self.duration = duration
         self.ageRating = ageRating
         self.genre = genre
-        self.releaseDate = releaseDate
+        self.year = year
         self.plot = plot
         self.poster = poster
         self.showings = showings
