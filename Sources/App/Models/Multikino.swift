@@ -121,7 +121,6 @@ extension Movie {
                   duration: movie.duration,
                   ageRating: movie.ageRating,
                   genre: genre,
-                  country: nil,
                   releaseDate: releaseDate,
                   plot: movie.plot,
                   poster: movie.poster,

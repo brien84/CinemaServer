@@ -86,7 +86,6 @@ struct ForumCinemas {
             
             movie.duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
             movie.ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
-            movie.country = doc.selectText("[id='eventInfoBlock']>*>*>[style='float: left; margin-right: 20px;']")?.afterColon()
             movie.plot = doc.selectText("div[class=contboxrow]:not([id])")
             
             movie.genre = {
