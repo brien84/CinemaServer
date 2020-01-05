@@ -34,7 +34,35 @@ struct ForumCinemas {
                     self.update(movie)
                 }.flatten(on: self.app).map { $0.compactMap { $0 } }
                 
-                return futureMovies
+                let updatedMovies = futureMovies.map { movies in
+                    movies.map { self.executeExceptions(on: $0) }
+                }
+                
+                return updatedMovies.map { movies in
+                    
+                    var filteredMovies = movies
+                    
+                    return filteredMovies.compactMap { movie in
+                        
+                        var moviesWithSameTitle = filteredMovies.filter {
+                            $0.originalTitle == movie.originalTitle
+                        }
+                        
+                        filteredMovies.removeAll(where: { moviesWithSameTitle.contains($0) })
+                        
+                        if moviesWithSameTitle.count > 1 {
+                            let lastMovie = moviesWithSameTitle.popLast()
+                            let showings = moviesWithSameTitle.flatMap { $0.showings }
+                            lastMovie?.showings.append(contentsOf: showings)
+                            
+                            return lastMovie!
+                        } else if moviesWithSameTitle.count == 1 {
+                            return movie
+                        }
+                        
+                        return nil
+                    }
+                }
             }
         }
     }
@@ -49,9 +77,13 @@ struct ForumCinemas {
             guard let doc: Document = try? SwiftSoup.parse(html) else { return nil }
             
             guard let title = doc.selectText("span[class='movieName']") else { return nil }
-            movie.title = title.sanitizeTitle()
+            movie.title = title//.sanitizeTitle()
             
-            movie.originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")?.sanitizeTitle()
+            movie.originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")//?.sanitizeTitle()
+            
+            // TEMP:
+            movie.originalTitle = String((movie.originalTitle?.dropLast(7))!)
+            
             movie.duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
             movie.ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
             movie.country = doc.selectText("[id='eventInfoBlock']>*>*>[style='float: left; margin-right: 20px;']")?.afterColon()
@@ -63,11 +95,14 @@ struct ForumCinemas {
                 return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Žanras") })?.afterColon()
             }()
             
-            movie.releaseDate = {
-                guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
-                // Maps text attributes from elements to an array, then finds text containing our string and returns it.
-                return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Kino teatruose nuo") })?.afterColon()
-            }()
+            // TEMP:
+            movie.releaseDate = String(movie.originalTitle!.suffix(6).dropLast(1).dropFirst(1))
+            
+//            movie.releaseDate = {
+//                guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
+//                // Maps text attributes from elements to an array, then finds text containing our string and returns it.
+//                return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Kino teatruose nuo") })?.afterColon()
+//            }()
             
             movie.poster = {
                 guard let elements = try? doc.select("div[style='width: 97px; height: 146px; overflow: hidden;']>*") else { return nil }
@@ -75,6 +110,7 @@ struct ForumCinemas {
             }()
             
             return movie
+            
         }.catch { error in
             self.logger.warning("update: \(error)")
         }
@@ -85,6 +121,7 @@ struct ForumCinemas {
      
      - Returns: Array of Movie, which only contain MovieID and Showings.
      */
+    
     private func createMovies(from showings: [(movieID: String, showing: Showing)]) -> [Movie] {
         var result = [Movie]()
         
@@ -106,6 +143,7 @@ struct ForumCinemas {
      
      - Returns: Array of tuple containing Showing and Showing's movieID.
      */
+    
     private func getShowings(with form: RequestForm) -> Future<[(movieID: String, showing: Showing)]> {
         return webClient.getHTML(from: "http://www.forumcinemas.lt/", with: form).map { html in
             guard let doc: Document = try? SwiftSoup.parse(html) else { return [] }
@@ -147,6 +185,7 @@ struct ForumCinemas {
      
     - Returns: RequestForm array with every area and date combination.
     */
+    
     private func getRequestForms() -> Future<[RequestForm]> {
         return webClient.getHTML(from: "http://www.forumcinemas.lt/").flatMap { html in
             return self.parseOption(type: .area, from: html).map { area -> Future<[RequestForm]> in
@@ -173,6 +212,34 @@ struct ForumCinemas {
         let values = items.compactMap { try? $0.attr("value") }
         
         return values
+    }
+}
+
+extension ForumCinemas: DataExceptionable {
+    func executeExceptions(on movie: Movie) -> Movie {
+        guard let exceptions = readExceptions(for: "ForumCinemas") else { return movie }
+        
+        if let titleExceptions = exceptions["title"] as? [String : String] {
+            for (key, value) in titleExceptions {
+                movie.title = movie.title?.replacingOccurrences(of: key, with: value)
+            }
+        }
+        
+        if let originalTitleExceptions = exceptions["originalTitle"] as? [String : String] {
+            for (key, value) in originalTitleExceptions {
+                movie.originalTitle = movie.originalTitle?.replacingOccurrences(of: key, with: value)
+            }
+        }
+        
+        if let yearExceptions = exceptions["year"] as? [String : String] {
+            for (movieTitle, year) in yearExceptions {
+                if movie.originalTitle == movieTitle {
+                    movie.releaseDate = year
+                }
+            }
+        }
+        
+        return movie
     }
 }
 
@@ -215,17 +282,5 @@ extension String {
             .replacingOccurrences(of: " Kaune", with: "")
             .replacingOccurrences(of: " Klaipėdoje", with: "")
             .replacingOccurrences(of: " Šiauliuose", with: "")
-    }
-    
-    fileprivate func sanitizeTitle() -> String {
-        return self
-            .replacingOccurrences(of: " (dubbed)", with: "")
-            .replacingOccurrences(of: " (dubliuotas)", with: "")
-            .replacingOccurrences(of: " (OV)", with: "")
-            .replacingOccurrences(of: "LNK Kino Startas: ", with: "")
-            .replacingOccurrences(of: "POWER HIT RADIO premjera: ", with: "")
-            .replacingOccurrences(of: "ZIP FM premjera: ", with: "")
-            .replacingOccurrences(of: "TV3 premjera: ", with: "")
-            .replacingOccurrences(of: "POWER HIT RADIO premiere: ", with: "")
     }
 }
