@@ -84,7 +84,7 @@ struct ForumCinemas {
             guard let title = doc.selectText("span[class='movieName']") else { return nil }
             
             var originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")
-            originalTitle = String((originalTitle?.dropLast(7))!)
+            originalTitle = String(((originalTitle?.dropLast(7))!))
             
             let duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
             let ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
@@ -110,7 +110,7 @@ struct ForumCinemas {
                 return try? elements.attr("src")
             }()
             
-            let movie = Movie(id: nil, title: title, originalTitle: originalTitle, duration: duration, ageRating: ageRating, genre: genre, year: year, plot: plot, poster: poster, showings: stub.showings)
+            let movie = Movie(id: nil, title: title, originalTitle: originalTitle!, duration: duration, ageRating: ageRating, genre: genre, year: year, plot: plot, poster: poster, showings: stub.showings)
             
             return movie
             
@@ -229,13 +229,13 @@ extension ForumCinemas: DataExceptionable {
         
         if let titleExceptions = exceptions["title"] as? [String : String] {
             for (key, value) in titleExceptions {
-                movie.title = movie.title?.replacingOccurrences(of: key, with: value)
+                movie.title = movie.title.replacingOccurrences(of: key, with: value)
             }
         }
         
         if let originalTitleExceptions = exceptions["originalTitle"] as? [String : String] {
             for (key, value) in originalTitleExceptions {
-                movie.originalTitle = movie.originalTitle?.replacingOccurrences(of: key, with: value)
+                movie.originalTitle = movie.originalTitle.replacingOccurrences(of: key, with: value)
             }
         }
         

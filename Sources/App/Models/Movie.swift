@@ -11,8 +11,8 @@ import Validation
 
 final class Movie {
     var id: Int?
-    var title: String?
-    var originalTitle: String?
+    var title: String
+    var originalTitle: String
     var duration: String?
     var ageRating: String?
     var genre: String?
@@ -21,8 +21,7 @@ final class Movie {
     var poster: String?
     var showings: [Showing]
     
-    init(id: Int?, title: String?, originalTitle: String?, duration: String?, ageRating: String?, genre: String?, year: String?, plot: String?, poster: String?, showings: [Showing]) {
-        
+    init(id: Int?, title: String, originalTitle: String, duration: String?, ageRating: String?, genre: String?, year: String?, plot: String?, poster: String?, showings: [Showing]) {
         self.id = id
         self.title = title
         self.originalTitle = originalTitle
@@ -44,6 +43,6 @@ extension Movie: Content { }
 
 extension Movie: Equatable {
     static func == (lhs: Movie, rhs: Movie) -> Bool {
-        lhs.originalTitle?.lowercased() == rhs.originalTitle?.lowercased()
+        lhs.originalTitle.lowercased() == rhs.originalTitle.lowercased()
     }
 }

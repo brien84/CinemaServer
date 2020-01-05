@@ -68,13 +68,13 @@ extension Multikino: DataExceptionable {
         
         if let titleExceptions = exceptions["title"] as? [String : String] {
             for (key, value) in titleExceptions {
-                movie.title = movie.title?.replacingOccurrences(of: key, with: value)
+                movie.title = movie.title.replacingOccurrences(of: key, with: value)
             }
         }
         
         if let originalTitleExceptions = exceptions["originalTitle"] as? [String : String] {
             for (key, value) in originalTitleExceptions {
-                movie.originalTitle = movie.originalTitle?.replacingOccurrences(of: key, with: value)
+                movie.originalTitle = movie.originalTitle.replacingOccurrences(of: key, with: value)
             }
         }
         
