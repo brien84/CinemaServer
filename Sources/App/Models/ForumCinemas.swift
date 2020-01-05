@@ -22,44 +22,48 @@ struct ForumCinemas {
     
     func getMovies() -> Future<[Movie]> {
         return getRequestForms().flatMap { forms in
-            
+
             let futureShowings = forms.map { form in
                 self.getShowings(with: form)
             }.flatten(on: self.app).map { $0.flatMap { $0 } }
-            
+
             return futureShowings.flatMap { showings in
-                let movies = self.createMovies(from: showings)
-                
+                print(showings.count)
+
+                let movies = self.createForumStubs(from: showings)
+
+                print(movies.count)
+
                 let futureMovies = movies.map { movie in
-                    self.update(movie)
+                    self.createMovie(from: movie)
                 }.flatten(on: self.app).map { $0.compactMap { $0 } }
-                
+
                 let updatedMovies = futureMovies.map { movies in
                     movies.map { self.executeExceptions(on: $0) }
                 }
-                
+
                 return updatedMovies.map { movies in
-                    
+
                     var filteredMovies = movies
-                    
+
                     return filteredMovies.compactMap { movie in
-                        
+
                         var moviesWithSameTitle = filteredMovies.filter {
                             $0.originalTitle == movie.originalTitle
                         }
-                        
+
                         filteredMovies.removeAll(where: { moviesWithSameTitle.contains($0) })
-                        
+
                         if moviesWithSameTitle.count > 1 {
                             let lastMovie = moviesWithSameTitle.popLast()
                             let showings = moviesWithSameTitle.flatMap { $0.showings }
                             lastMovie?.showings.append(contentsOf: showings)
-                            
+
                             return lastMovie!
                         } else if moviesWithSameTitle.count == 1 {
                             return movie
                         }
-                        
+
                         return nil
                     }
                 }
@@ -72,30 +76,28 @@ struct ForumCinemas {
      
      - Returns: Movie or nil if parsing was unsuccessful.
      */
-    private func update(_ movie: Movie) -> Future<Movie?> {
-        return webClient.getHTML(from: "http://www.forumcinemas.lt/Event/\(movie.movieID)/").map { html in
+
+    private func createMovie(from stub: MovieStub) -> Future<Movie?> {
+        return webClient.getHTML(from: "http://www.forumcinemas.lt/Event/\(stub.movieID)/").map { html in
             guard let doc: Document = try? SwiftSoup.parse(html) else { return nil }
             
             guard let title = doc.selectText("span[class='movieName']") else { return nil }
-            movie.title = title//.sanitizeTitle()
             
-            movie.originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")//?.sanitizeTitle()
+            var originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")
+            originalTitle = String((originalTitle?.dropLast(7))!)
             
-            // TEMP:
-            movie.originalTitle = String((movie.originalTitle?.dropLast(7))!)
+            let duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
+            let ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
+            let plot = doc.selectText("div[class=contboxrow]:not([id])")
             
-            movie.duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
-            movie.ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
-            movie.plot = doc.selectText("div[class=contboxrow]:not([id])")
-            
-            movie.genre = {
+            let genre: String? = {
                 guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
                 // Maps text attributes from elements to an array, then finds text containing our string and returns it.
                 return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Žanras") })?.afterColon()
             }()
             
             // TEMP:
-            movie.releaseDate = String(movie.originalTitle!.suffix(6).dropLast(1).dropFirst(1))
+            let releaseDate = String(originalTitle!.suffix(6).dropLast(1).dropFirst(1))
             
 //            movie.releaseDate = {
 //                guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
@@ -103,10 +105,12 @@ struct ForumCinemas {
 //                return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Kino teatruose nuo") })?.afterColon()
 //            }()
             
-            movie.poster = {
+            let poster: String? = {
                 guard let elements = try? doc.select("div[style='width: 97px; height: 146px; overflow: hidden;']>*") else { return nil }
                 return try? elements.attr("src")
             }()
+            
+            let movie = Movie(id: nil, movieID: "", title: title, originalTitle: originalTitle, duration: duration, ageRating: ageRating, genre: genre, releaseDate: releaseDate, plot: plot, poster: poster, showings: stub.showings)
             
             return movie
             
@@ -120,17 +124,17 @@ struct ForumCinemas {
      
      - Returns: Array of Movie, which only contain MovieID and Showings.
      */
-    
-    private func createMovies(from showings: [(movieID: String, showing: Showing)]) -> [Movie] {
-        var result = [Movie]()
+
+    private func createForumStubs(from showings: [(movieID: String, showing: Showing)]) -> [MovieStub] {
+        var result = [MovieStub]()
         
         showings.forEach { showing in
-            if let movie = result.first(where: { $0.movieID == showing.movieID }) {
-                movie.showings.append(showing.showing)
+            if var stub = result.first(where: { $0.movieID == showing.movieID }) {
+                stub.showings.append(showing.showing)
             } else {
-                let newMovie = Movie(movieID: showing.movieID)
-                newMovie.showings.append(showing.showing)
-                result.append(newMovie)
+                var newStub = MovieStub(movieID: showing.movieID)
+                newStub.showings.append(showing.showing)
+                result.append(newStub)
             }
         }
         
@@ -168,6 +172,11 @@ struct ForumCinemas {
     }
 
     // MARK: - Showing parsing methods
+    
+    private struct MovieStub {
+        let movieID: String
+        var showings = [Showing]()
+    }
     
     private struct RequestForm: Content {
         let theatreArea: String
