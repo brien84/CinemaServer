@@ -49,6 +49,8 @@
 			<key>The Grudge</key>
 			<string>2020</string>
 		</dict>
+		<key>poster</key>
+		<dict/>
 	</dict>
 	<key>Multikino</key>
 	<dict>
@@ -83,6 +85,8 @@
 			<key>1917</key>
 			<string>2019</string>
 		</dict>
+		<key>poster</key>
+		<dict/>
 	</dict>
 </dict>
 </plist>

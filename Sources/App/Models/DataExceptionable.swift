@@ -38,6 +38,14 @@ extension DataExceptionable {
             }
         }
         
+        if let posterExceptions = exceptions["poster"] as? [String : String] {
+            for (movieTitle, poster) in posterExceptions {
+                if movie.originalTitle == movieTitle {
+                    movie.poster = poster
+                }
+            }
+        }
+        
         return movie
     }
     
