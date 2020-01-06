@@ -7,7 +7,9 @@
 
 import Vapor
 
-struct Multikino {
+struct Multikino: DataExceptionable {
+    
+    private(set) var keyIdentifier = "Multikino"
 
     private let logger: Logger
     private let webClient: WebClient
@@ -37,34 +39,6 @@ struct Multikino {
         }.catch { error in
             self.logger.warning("Multikino.getMovies: \(error)")
         }
-    }
-}
-
-extension Multikino: DataExceptionable {
-    func executeExceptions(on movie: Movie) -> Movie {
-        guard let exceptions = readExceptions(for: "Multikino") else { return movie }
-        
-        if let titleExceptions = exceptions["title"] as? [String : String] {
-            for (key, value) in titleExceptions {
-                movie.title = movie.title.replacingOccurrences(of: key, with: value)
-            }
-        }
-        
-        if let originalTitleExceptions = exceptions["originalTitle"] as? [String : String] {
-            for (key, value) in originalTitleExceptions {
-                movie.originalTitle = movie.originalTitle.replacingOccurrences(of: key, with: value)
-            }
-        }
-        
-        if let yearExceptions = exceptions["year"] as? [String : String] {
-            for (movieTitle, year) in yearExceptions {
-                if movie.originalTitle == movieTitle {
-                    movie.year = year
-                }
-            }
-        }
-    
-        return movie
     }
 }
 

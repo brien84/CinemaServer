@@ -8,7 +8,9 @@
 import SwiftSoup
 import Vapor
 
-struct ForumCinemas {
+struct ForumCinemas: DataExceptionable {
+    
+    private(set) var keyIdentifier = "ForumCinemas"
     
     private let app: Application
     private let logger: Logger
@@ -193,34 +195,6 @@ struct ForumCinemas {
         let values = items.compactMap { try? $0.attr("value") }
         
         return values
-    }
-}
-
-extension ForumCinemas: DataExceptionable {
-    func executeExceptions(on movie: Movie) -> Movie {
-        guard let exceptions = readExceptions(for: "ForumCinemas") else { return movie }
-        
-        if let titleExceptions = exceptions["title"] as? [String : String] {
-            for (key, value) in titleExceptions {
-                movie.title = movie.title.replacingOccurrences(of: key, with: value)
-            }
-        }
-        
-        if let originalTitleExceptions = exceptions["originalTitle"] as? [String : String] {
-            for (key, value) in originalTitleExceptions {
-                movie.originalTitle = movie.originalTitle.replacingOccurrences(of: key, with: value)
-            }
-        }
-        
-        if let yearExceptions = exceptions["year"] as? [String : String] {
-            for (movieTitle, year) in yearExceptions {
-                if movie.originalTitle == movieTitle {
-                    movie.year = year
-                }
-            }
-        }
-        
-        return movie
     }
 }
 

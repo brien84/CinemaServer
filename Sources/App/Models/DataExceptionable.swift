@@ -9,12 +9,39 @@ import Foundation
 import Vapor
 
 protocol DataExceptionable {
-    func readExceptions(for key: String) -> [String : AnyObject]?
+    var keyIdentifier: String { get }
+    
     func executeExceptions(on movie: Movie) -> Movie
 }
 
 extension DataExceptionable {
-    func readExceptions(for key: String) -> [String : AnyObject]? {
+    func executeExceptions(on movie: Movie) -> Movie {
+        guard let exceptions = readExceptions(for: keyIdentifier) else { return movie }
+        
+        if let titleExceptions = exceptions["title"] as? [String : String] {
+            for (key, value) in titleExceptions {
+                movie.title = movie.title.replacingOccurrences(of: key, with: value)
+            }
+        }
+        
+        if let originalTitleExceptions = exceptions["originalTitle"] as? [String : String] {
+            for (key, value) in originalTitleExceptions {
+                movie.originalTitle = movie.originalTitle.replacingOccurrences(of: key, with: value)
+            }
+        }
+        
+        if let yearExceptions = exceptions["year"] as? [String : String] {
+            for (movieTitle, year) in yearExceptions {
+                if movie.originalTitle == movieTitle {
+                    movie.year = year
+                }
+            }
+        }
+        
+        return movie
+    }
+    
+    private func readExceptions(for key: String) -> [String : AnyObject]? {
         let directory = DirectoryConfig.detect()
         let url = URL(fileURLWithPath: "\(directory.workDir)Public/Exceptions.plist")
         guard let data = try? Data(contentsOf: url) else { return nil }
