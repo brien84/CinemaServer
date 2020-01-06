@@ -5,17 +5,16 @@
 //  Created by Marius on 03/10/2019.
 //
 
-import Foundation
 import Vapor
 
 struct Multikino {
 
-    private let webClient: WebClient
     private let logger: Logger
+    private let webClient: WebClient
     
     init(on app: Application) throws {
-        self.webClient = try WebClient(on: app)
         self.logger = try app.make(Logger.self)
+        self.webClient = try WebClient(on: app)
     }
     
     /**
@@ -23,6 +22,7 @@ struct Multikino {
      
      - Returns: Array of Movie.
      */
+    
     func getMovies() -> Future<[Movie]> {
         return webClient.getHTML(from: "https://multikino.lt/data/filmswithshowings/1001").map { html in
             
@@ -32,30 +32,8 @@ struct Multikino {
                 return Movie(from: movie)
             }
             
-            var updatedMovies = futureMovies.map { self.executeExceptions(on: $0) }
+            return futureMovies.map { self.executeExceptions(on: $0) }
             
-            // TODO: Refactor
-            return updatedMovies.compactMap { movie in
-                
-                var moviesWithSameTitle = updatedMovies.filter {
-                    $0.originalTitle == movie.originalTitle
-                }
-                    
-                updatedMovies.removeAll(where: { moviesWithSameTitle.contains($0) })
-                    
-                if moviesWithSameTitle.count > 1 {
-                    let lastMovie = moviesWithSameTitle.popLast()
-                    let showings = moviesWithSameTitle.flatMap { $0.showings }
-                    lastMovie?.showings.append(contentsOf: showings)
-                        
-                    return lastMovie!
-                } else if moviesWithSameTitle.count == 1 {
-                    return movie
-                }
-                    
-                return nil
-            }
-    
         }.catch { error in
             self.logger.warning("Multikino.getMovies: \(error)")
         }
@@ -98,7 +76,11 @@ extension Movie {
         let title = movie.title.findRegex(#"^.*?(?=\s\()"#) ?? movie.title
 
         let originalTitle = movie.title.findRegex(#"(?<=\()(.*?)(?=\))"#) ?? movie.title
-        let year = String(movie.year.split(separator: ".").last ?? "N/A")
+  
+        guard let year: String = {
+            guard let yearSubstring = movie.year.split(separator: ".").last else { return nil }
+            return String(yearSubstring)
+        }() else { return nil }
         
         let genre: String = {
             let genre = movie.genres.names.reduce(into: "") { result, genre in
@@ -117,10 +99,10 @@ extension Movie {
         self.init(id: nil,
                   title: title,
                   originalTitle: originalTitle,
+                  year: year,
                   duration: movie.duration,
                   ageRating: movie.ageRating,
                   genre: genre,
-                  year: year,
                   plot: movie.plot,
                   poster: movie.poster,
                   showings: showings)
