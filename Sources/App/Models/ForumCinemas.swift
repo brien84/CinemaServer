@@ -5,19 +5,19 @@
 //  Created by Marius on 01/10/2019.
 //
 
-import Vapor
 import SwiftSoup
+import Vapor
 
 struct ForumCinemas {
     
     private let app: Application
-    private let webClient: WebClient
     private let logger: Logger
+    private let webClient: WebClient
     
     init(on app: Application) throws {
         self.app = app
-        self.webClient = try WebClient(on: app)
         self.logger = try app.make(Logger.self)
+        self.webClient = try WebClient(on: app)
     }
     
     func getMovies() -> Future<[Movie]> {
@@ -26,53 +26,24 @@ struct ForumCinemas {
             let futureShowings = forms.map { form in
                 self.getShowings(with: form)
             }.flatten(on: self.app).map { $0.flatMap { $0 } }
-
-            return futureShowings.flatMap { showings in
-                print(showings.count)
-
-                let movies = self.createForumStubs(from: showings)
-
-                print(movies.count)
-
-                let futureMovies = movies.map { movie in
-                    self.createMovie(from: movie)
+                        
+            let futureMovies = futureShowings.flatMap { showings -> Future<[Movie]> in
+                let movieStubs = self.createMovieStubs(from: showings)
+                
+                return movieStubs.map { stub in
+                    self.createMovie(from: stub)
                 }.flatten(on: self.app).map { $0.compactMap { $0 } }
-
-                let updatedMovies = futureMovies.map { movies in
-                    movies.map { self.executeExceptions(on: $0) }
-                }
-
-                return updatedMovies.map { movies in
-
-                    var filteredMovies = movies
-
-                    return filteredMovies.compactMap { movie in
-
-                        var moviesWithSameTitle = filteredMovies.filter {
-                            $0.originalTitle == movie.originalTitle
-                        }
-
-                        filteredMovies.removeAll(where: { moviesWithSameTitle.contains($0) })
-
-                        if moviesWithSameTitle.count > 1 {
-                            let lastMovie = moviesWithSameTitle.popLast()
-                            let showings = moviesWithSameTitle.flatMap { $0.showings }
-                            lastMovie?.showings.append(contentsOf: showings)
-
-                            return lastMovie!
-                        } else if moviesWithSameTitle.count == 1 {
-                            return movie
-                        }
-
-                        return nil
-                    }
-                }
             }
+            
+            return futureMovies.map { movies in
+                return movies.map { self.executeExceptions(on: $0) }
+            }
+            
         }
     }
     
     /**
-     Sends request with MovieID and parses rest of Movie info.
+     Creates Movie from MovieStub object.
      
      - Returns: Movie or nil if parsing was unsuccessful.
      */
@@ -83,8 +54,14 @@ struct ForumCinemas {
             
             guard let title = doc.selectText("span[class='movieName']") else { return nil }
             
-            var originalTitle = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']")
-            originalTitle = String(((originalTitle?.dropLast(7))!))
+            guard let originalTitleWithYear = doc.selectText("div[style*='color: #666666; font-size: 13px; line-height: 15px;']") else { return nil }
+            
+            let originalTitle = String(originalTitleWithYear.dropLast(7))
+            
+            guard let year: String = {
+                guard let year = originalTitleWithYear.findRegex(#"\(\d{4}\)"#) else { return nil }
+                return String(year)
+            }() else { return nil }
             
             let duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
             let ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
@@ -96,23 +73,21 @@ struct ForumCinemas {
                 return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Žanras") })?.afterColon()
             }()
             
-            // TEMP:
-            let year = String(originalTitle!.suffix(6).dropLast(1).dropFirst(1))
-            
-//            movie.releaseDate = {
-//                guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
-//                // Maps text attributes from elements to an array, then finds text containing our string and returns it.
-//                return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Kino teatruose nuo") })?.afterColon()
-//            }()
-            
             let poster: String? = {
                 guard let elements = try? doc.select("div[style='width: 97px; height: 146px; overflow: hidden;']>*") else { return nil }
                 return try? elements.attr("src")
             }()
             
-            let movie = Movie(id: nil, title: title, originalTitle: originalTitle!, duration: duration, ageRating: ageRating, genre: genre, year: year, plot: plot, poster: poster, showings: stub.showings)
-            
-            return movie
+            return Movie(id: nil,
+                         title: title,
+                         originalTitle: originalTitle,
+                         year: year,
+                         duration: duration,
+                         ageRating: ageRating,
+                         genre: genre,
+                         plot: plot,
+                         poster: poster,
+                         showings: stub.showings)
             
         }.catch { error in
             self.logger.warning("update: \(error)")
@@ -120,12 +95,17 @@ struct ForumCinemas {
     }
     
     /**
-     Reduces movieID and showing tuples to Movies.
+     Reduces movieID and showing tuples to array of MovieStub.
      
-     - Returns: Array of Movie, which only contain MovieID and Showings.
+     - Returns: Array of MovieStub.
      */
+    
+    private struct MovieStub {
+        let movieID: String
+        var showings = [Showing]()
+    }
 
-    private func createForumStubs(from showings: [(movieID: String, showing: Showing)]) -> [MovieStub] {
+    private func createMovieStubs(from showings: [(movieID: String, showing: Showing)]) -> [MovieStub] {
         var result = [MovieStub]()
         
         showings.forEach { showing in
@@ -170,29 +150,17 @@ struct ForumCinemas {
             }
         }
     }
-
-    // MARK: - Showing parsing methods
     
-    private struct MovieStub {
-        let movieID: String
-        var showings = [Showing]()
-    }
-    
-    private struct RequestForm: Content {
-        let theatreArea: String
-        let dt: String
-    }
-    
-    private enum OptionType {
-        case area
-        case date
-    }
-
     /**
     Parses area options from ForumCinemas homepage, then loops through each area and parses dates.
      
     - Returns: RequestForm array with every area and date combination.
     */
+    
+    private struct RequestForm: Content {
+        let theatreArea: String
+        let dt: String
+    }
     
     private func getRequestForms() -> Future<[RequestForm]> {
         return webClient.getHTML(from: "http://www.forumcinemas.lt/").flatMap { html in
@@ -213,9 +181,14 @@ struct ForumCinemas {
         }
     }
     
-    private func parseOption(type: OptionType, from html: String) -> [String] {
+    private enum RequestOption {
+        case area
+        case date
+    }
+    
+    private func parseOption(type: RequestOption, from html: String) -> [String] {
         guard let doc: Document = try? SwiftSoup.parse(html) else { return [] }
-        let selector = type == OptionType.area ? "select[id='area']>option[value]" : "select[name='dt']>option[value]"
+        let selector = type == RequestOption.area ? "select[id='area']>option[value]" : "select[name='dt']>option[value]"
         guard let items = try? doc.select(selector) else { return [] }
         let values = items.compactMap { try? $0.attr("value") }
         
