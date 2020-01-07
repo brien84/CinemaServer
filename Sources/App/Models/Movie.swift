@@ -5,15 +5,15 @@
 //  Created by Marius on 01/10/2019.
 //
 
-import Vapor
 import FluentSQLite
 import Validation
+import Vapor
 
 final class Movie {
     var id: Int?
     var title: String
     var originalTitle: String
-    var year: String?
+    var year: String
     var duration: String?
     var ageRating: String?
     var genre: String?
@@ -21,7 +21,7 @@ final class Movie {
     var poster: String?
     var showings: [Showing]
     
-    init(id: Int?, title: String, originalTitle: String, year: String?, duration: String?, ageRating: String?, genre: String?, plot: String?, poster: String?, showings: [Showing]) {
+    init(id: Int?, title: String, originalTitle: String, year: String, duration: String?, ageRating: String?, genre: String?, plot: String?, poster: String?, showings: [Showing]) {
         self.id = id
         self.title = title
         self.originalTitle = originalTitle
