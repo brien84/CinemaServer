@@ -61,7 +61,7 @@ struct ForumCinemas: DataExceptionable {
             let originalTitle = String(originalTitleWithYear.dropLast(7))
             
             guard let year: String = {
-                guard let year = originalTitleWithYear.findRegex(#"\(\d{4}\)"#) else { return nil }
+                guard let year = originalTitleWithYear.findRegex(#"(?<=\()(\d{4})(?=\))"#) else { return nil }
                 return String(year)
             }() else { return nil }
             
