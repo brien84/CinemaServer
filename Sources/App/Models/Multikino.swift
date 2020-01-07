@@ -56,6 +56,8 @@ extension Movie {
             return String(yearSubstring)
         }() else { return nil }
         
+        let duration = movie.duration.replacingOccurrences(of: ".", with: "")
+        
         let genre: String = {
             let genre = movie.genres.names.reduce(into: "") { result, genre in
                 result.append(contentsOf: "\(genre), ")
@@ -76,7 +78,7 @@ extension Movie {
                   title: title,
                   originalTitle: originalTitle,
                   year: year,
-                  duration: movie.duration,
+                  duration: duration,
                   ageRating: movie.ageRating,
                   genre: genre,
                   plot: movie.plot,

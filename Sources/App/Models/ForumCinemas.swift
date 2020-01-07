@@ -65,7 +65,7 @@ struct ForumCinemas: DataExceptionable {
                 return String(year)
             }() else { return nil }
             
-            let duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()
+            let duration = doc.selectText("[id='eventInfoBlock']>div>div:not([style]):not([class])")?.afterColon()?.convertDurationToMinutes()
             let ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
             let plot = doc.selectText("div[class=contboxrow]:not([id])")
             
@@ -200,21 +200,6 @@ struct ForumCinemas: DataExceptionable {
 }
 
 extension String {
-    fileprivate func convertCity() -> String? {
-        switch self {
-        case "1011":
-            return City.vilnius.rawValue
-        case "1012":
-            return City.kaunas.rawValue
-        case "1014":
-            return City.siauliai.rawValue
-        case "1015":
-            return City.klaipeda.rawValue
-        default:
-            return nil
-        }
-    }
-    
     fileprivate func convertAgeRating() -> String? {
         switch self {
         case "Įvairaus amžiaus žiūrovams":
@@ -230,6 +215,33 @@ extension String {
         default:
             return nil
         }
+    }
+    
+    fileprivate func convertCity() -> String? {
+        switch self {
+        case "1011":
+            return City.vilnius.rawValue
+        case "1012":
+            return City.kaunas.rawValue
+        case "1014":
+            return City.siauliai.rawValue
+        case "1015":
+            return City.klaipeda.rawValue
+        default:
+            return nil
+        }
+    }
+    
+    fileprivate func convertDurationToMinutes() -> String {
+        let hoursString = self.split(separator: "h")[0]
+        guard let hours = Int(hoursString) else { return self }
+        
+        let minutesString = self.split(separator: " ")[1].split(separator: "m")[0]
+        guard let minutes = Int(minutesString) else { return self }
+        
+        let result = hours * 60 + minutes
+    
+        return ("\(result) min")
     }
     
     fileprivate func sanitizeVenue() -> String {
