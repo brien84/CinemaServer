@@ -77,7 +77,8 @@ struct ForumCinemas: DataExceptionable {
             
             let poster: String? = {
                 guard let elements = try? doc.select("div[style='width: 97px; height: 146px; overflow: hidden;']>*") else { return nil }
-                return try? elements.attr("src")
+                let poster = try? elements.attr("src")
+                return poster?.sanitizeHttp()
             }()
             
             return Movie(id: nil,

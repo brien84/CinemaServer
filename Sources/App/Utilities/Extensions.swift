@@ -46,9 +46,14 @@ extension String {
     
         return nil
     }
+    
+    func sanitizeHttp() -> String {
+        return self.replacingOccurrences(of: "http://", with: "https://")
+    }
 }
 
 // MARK: - SwiftSoup
+
 extension Document {
     func selectText(_ selector: String) -> String? {
         guard let elements = try? self.select(selector) else { return nil }

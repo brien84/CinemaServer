@@ -70,6 +70,8 @@ extension Movie {
             }
         }
         
+        let poster = movie.poster.sanitizeHttp()
+        
         self.init(id: nil,
                   title: title,
                   originalTitle: originalTitle,
@@ -78,7 +80,7 @@ extension Movie {
                   ageRating: movie.ageRating,
                   genre: genre,
                   plot: movie.plot,
-                  poster: movie.poster,
+                  poster: poster,
                   showings: showings)
     }
 }
