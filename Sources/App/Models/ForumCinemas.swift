@@ -103,19 +103,23 @@ struct ForumCinemas: DataExceptionable {
      - Returns: Array of MovieStub.
      */
     
-    private struct MovieStub {
+    private class MovieStub {
         let movieID: String
         var showings = [Showing]()
+        
+        init(movieID: String) {
+            self.movieID = movieID
+        }
     }
 
     private func createMovieStubs(from showings: [(movieID: String, showing: Showing)]) -> [MovieStub] {
         var result = [MovieStub]()
         
         showings.forEach { showing in
-            if var stub = result.first(where: { $0.movieID == showing.movieID }) {
+            if let stub = result.first(where: { $0.movieID == showing.movieID }) {
                 stub.showings.append(showing.showing)
             } else {
-                var newStub = MovieStub(movieID: showing.movieID)
+                let newStub = MovieStub(movieID: showing.movieID)
                 newStub.showings.append(showing.showing)
                 result.append(newStub)
             }
@@ -133,23 +137,35 @@ struct ForumCinemas: DataExceptionable {
     private func getShowings(with form: RequestForm) -> Future<[(movieID: String, showing: Showing)]> {
         return webClient.getHTML(from: "http://www.forumcinemas.lt/", with: form).map { html in
             guard let doc: Document = try? SwiftSoup.parse(html) else { return [] }
-            guard let items = try? doc.select("div[id*=showtime]") else { return [] }
             
-            return items.flatMap { item -> [(String, Showing)] in
-                guard let id = try? item.attr("id"), let movieID = id.findRegex(#"(?<=showTimes)\d*"#) else { return [] }
+            guard let showingBlocks = try? doc.select("td[class*=result]") else { return [] }
+            
+            return showingBlocks.flatMap { block -> [(String, Showing)] in
                 
-                return item.children().flatMap { child -> [(String, Showing)] in
-                    guard let venue = try? child.select("div[style]").text().sanitizeVenue() else { return [] }
+                var is3D = false
+                if let attribute3D = try? block.getElementsByAttributeValue("title", "3D") {
+                    is3D = !attribute3D.isEmpty()
+                }
+                
+                guard let items = try? block.select("div[id*=showtime]") else { return [] }
+                
+                return items.flatMap { item -> [(String, Showing)] in
+                    guard let id = try? item.attr("id"), let movieID = id.findRegex(#"(?<=showTimes)\d*"#) else { return [] }
                     
-                    return child.children().compactMap { child -> (String, Showing)? in
-                        guard child.hasClass("showTime") else { return nil }
-                        guard let time = try? child.text() else { return nil }
-                        guard let date = "\(form.dt) \(time)".convertToDate() else { return nil }
-                        guard let city = form.theatreArea.convertCity() else { return nil }
+                    return item.children().flatMap { child -> [(String, Showing)] in
+                        guard let venue = try? child.select("div[style]").text().sanitizeVenue() else { return [] }
                         
-                        return (movieID: movieID, showing: Showing(city: city, date: date, venue: venue))
+                        return child.children().compactMap { child -> (String, Showing)? in
+                            guard child.hasClass("showTime") else { return nil }
+                            guard let time = try? child.text() else { return nil }
+                            guard let date = "\(form.dt) \(time)".convertToDate() else { return nil }
+                            guard let city = form.theatreArea.convertCity() else { return nil }
+                            
+                            return (movieID: movieID, showing: Showing(city: city, date: date, venue: venue, is3D: is3D))
+                        }
                     }
                 }
+                
             }
         }
     }

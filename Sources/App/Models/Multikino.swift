@@ -90,8 +90,9 @@ extension Movie {
 extension Showing {
     fileprivate init?(from time: MultikinoService.MultikinoMovie.MultikinoShowing.Time) {
         guard let date = time.date.convertToDate() else { return nil }
+        let is3D = time.screen_type == "3D" ? true : false
         
-        self.init(city: City.vilnius.rawValue, date: date, venue: "Multikino")
+        self.init(city: City.vilnius.rawValue, date: date, venue: "Multikino", is3D: is3D)
     }
 }
 
