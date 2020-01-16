@@ -60,7 +60,7 @@ extension Movie {
         
         let genre: String = {
             let genre = movie.genres.names.reduce(into: "") { result, genre in
-                result.append(contentsOf: "\(genre), ")
+                result.append(contentsOf: "\(genre.name), ")
             }
             
             return String(genre.dropLast(2))
@@ -105,7 +105,6 @@ private struct MultikinoService: Decodable {
     }
     
     struct MultikinoMovie: Decodable {
-        
         let title: String
         let duration: String
         let ageRating: String
