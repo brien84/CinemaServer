@@ -48,7 +48,7 @@ extension Movie {
         guard movie.showShowings == true else { return nil }
 
         let title = movie.title.findRegex(#"^.*?(?=\s\()"#) ?? movie.title
-
+        
         let originalTitle = movie.title.findRegex(#"(?<=\()(.*?)(?=\))"#) ?? movie.title
   
         guard let year: String = {
@@ -58,14 +58,8 @@ extension Movie {
         
         let duration = movie.duration.replacingOccurrences(of: ".", with: "")
         
-        let genre: String = {
-            let genre = movie.genres.names.reduce(into: "") { result, genre in
-                result.append(contentsOf: "\(genre.name), ")
-            }
-            
-            return String(genre.dropLast(2))
-        }()
-        
+        let genre = movie.genres.names.map { $0.name }
+
         let showings = movie.showings.flatMap { showing in
             return showing.times.compactMap { time in
                 return Showing(from: time)

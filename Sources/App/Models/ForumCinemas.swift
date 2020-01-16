@@ -69,10 +69,12 @@ struct ForumCinemas: DataExceptionable {
             let ageRating = doc.selectText("[id='eventInfoBlock']>*>[style*='float: none;']")?.afterColon()?.convertAgeRating()
             let plot = doc.selectText("div[class=contboxrow]:not([id])")
             
-            let genre: String? = {
+            let genre: [String]? = {
                 guard let elements = try? doc.select("[id='eventInfoBlock']>*>[style='margin-top: 10px;']") else { return nil }
                 // Maps text attributes from elements to an array, then finds text containing our string and returns it.
-                return elements.compactMap { try? $0.text() }.first(where: { $0.contains("Žanras") })?.afterColon()
+                let genreString = elements.compactMap { try? $0.text() }.first(where: { $0.contains("Žanras") })?.afterColon()
+                
+                return genreString?.replacingOccurrences(of: ", ", with: ",").split(separator: ",").map { $0.prefix(1).capitalized + $0.dropFirst() }
             }()
             
             let poster: String? = {
