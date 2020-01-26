@@ -59,14 +59,18 @@ extension Movie {
         let duration = movie.duration.replacingOccurrences(of: ".", with: "")
         
         let genre = movie.genres.names.map { $0.name }
-
+        
+        let poster: String? = {
+            let poster = movie.poster.sanitizeHttp()
+            guard poster.contains("https://") else { return nil }
+            return poster
+        }()
+        
         let showings = movie.showings.flatMap { showing in
             return showing.times.compactMap { time in
                 return Showing(from: time)
             }
         }
-        
-        let poster = movie.poster.sanitizeHttp()
         
         self.init(id: nil,
                   title: title,

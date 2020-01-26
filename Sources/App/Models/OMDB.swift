@@ -23,7 +23,12 @@ struct OMDB {
         return webClient.getHTML(from: "http://www.omdbapi.com/", with: query).map { html in
             
             guard let omdb = try? JSONDecoder().decode(omdbService.self, from: html) else { return movie }
-            movie.poster = omdb.poster.replacingOccurrences(of: "SX300", with: "SX600")
+            
+            if omdb.poster.contains("https://") {
+                movie.poster = omdb.poster.replacingOccurrences(of: "SX300", with: "SX600")
+            } else {
+                movie.poster = nil
+            }
             
             return movie
         }
