@@ -58,7 +58,7 @@ extension Movie {
         
         let duration = movie.duration.replacingOccurrences(of: ".", with: "")
         
-        let genre = movie.genres.names.map { $0.name }
+        let genres = movie.genres.names.map { $0.name }
         
         let poster: String? = {
             let poster = movie.poster.sanitizeHttp()
@@ -78,7 +78,7 @@ extension Movie {
                   year: year,
                   duration: duration,
                   ageRating: movie.ageRating,
-                  genre: genre,
+                  genres: genres,
                   plot: movie.plot,
                   poster: poster,
                   showings: showings)
