@@ -2,12 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>ForceUpdate</key>
+	<key>forceUpdate</key>
 	<false/>
 	<key>ForumCinemas</key>
 	<dict>
 		<key>title</key>
 		<dict>
+			<key>Pamatyk pirmas: artėjančio „Kino pavasario“ filmas „Nematomas gyvenimas“</key>
+			<string>Nematomas gyvenimas</string>
+			<key>Japonijos kino festivalis 2020: </key>
+			<string></string>
+			<key>Power Hit Radio pristato: </key>
+			<string></string>
+			<key>Baltų gentys. Paskutinieji Europos pagonys</key>
+			<string>Baltų gentys</string>
+			<key> (rusų k.)</key>
+			<string></string>
 			<key> (specialusis seansas originalo kalba)</key>
 			<string></string>
 			<key>LNK Kino Startas: </key>
@@ -21,8 +31,24 @@
 		</dict>
 		<key>originalTitle</key>
 		<dict>
-			<key>Vtorzheniye 2</key>
-			<string>Attraction 2</string>
+			<key>Japonijos kino festivalis 2020: </key>
+			<string></string>
+			<key>KP20: </key>
+			<string></string>
+			<key>FIKSIKI PROTIV KRABOTOV</key>
+			<string>Fiksiki protiv Krabotov</string>
+			<key>Baltic Tribes. The Last Pagans of Europe</key>
+			<string>Baltu Ciltis</string>
+			<key>Power Hit Radio pristato: </key>
+			<string></string>
+			<key>Harley Quinn: Birds of Prey</key>
+			<string>Birds of Prey</string>
+			<key>Brahms: The Boy 2</key>
+			<string>Brahms: The Boy II</string>
+			<key>LOD 2</key>
+			<string>Ice 2</string>
+			<key>Strazhi Arktiki</key>
+			<string>Arctic Dogs</string>
 			<key>Frozen 2</key>
 			<string>Frozen II</string>
 			<key>Celle que vous croyez</key>
@@ -42,20 +68,13 @@
 			<key> 3D</key>
 			<string></string>
 		</dict>
-		<key>year</key>
-		<dict>
-			<key>Spies in Disguise</key>
-			<string>2019</string>
-			<key>The Grudge</key>
-			<string>2020</string>
-		</dict>
-		<key>poster</key>
-		<dict/>
 	</dict>
 	<key>Multikino</key>
 	<dict>
 		<key>title</key>
 		<dict>
+			<key>NORMALIOS BOBOS EINA OUT: </key>
+			<string></string>
 			<key>Multikinukas: </key>
 			<string></string>
 			<key>MultiBabyKino: </key>
@@ -63,30 +82,23 @@
 		</dict>
 		<key>originalTitle</key>
 		<dict>
+			<key>Baltic Tribes. The Last Pagans of Europe</key>
+			<string>Baltu Ciltis</string>
+			<key>Boy 2</key>
+			<string>Brahms: The Boy II</string>
+			<key>ЛЁД 2</key>
+			<string>Ice 2</string>
+			<key>Emma</key>
+			<string>Emma.</string>
 			<key>Holop</key>
 			<string>Kholop</string>
-			<key>Politseiskiy s Rublyovki</key>
-			<string>Politseyskiy s Rublyovki. Novogodniy bespredel 2</string>
 			<key>Grudge  2020</key>
 			<string>The Grudge</string>
 			<key>Frozen 2</key>
 			<string>Frozen II</string>
-			<key>Ford vs. Ferrari</key>
-			<string>Ford v Ferrari</string>
 			<key>MultiBabyKino: </key>
 			<string></string>
 		</dict>
-		<key>year</key>
-		<dict>
-			<key>Frozen II</key>
-			<string>2019</string>
-			<key>Jojo Rabbit</key>
-			<string>2019</string>
-			<key>1917</key>
-			<string>2019</string>
-		</dict>
-		<key>poster</key>
-		<dict/>
 	</dict>
 </dict>
 </plist>
