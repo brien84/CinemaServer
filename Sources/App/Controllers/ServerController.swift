@@ -5,14 +5,14 @@
 //  Created by Marius on 30/09/2019.
 //
 
-import Vapor
 import FluentSQLite
+import Vapor
 
 final class ServerController {
     
     private let app: Application
-    private let logger: Logger
     private let conn: SQLiteConnection
+    private let logger: Logger
     
     private let forum: ForumCinemas
     private let multi: Multikino
@@ -32,9 +32,9 @@ final class ServerController {
     }
     
     private func update() {
-        self.logger.info("Update is starting!")
-        
-        /// Transaction executes only if all futures return successfully!
+        logger.info("Update is starting!")
+    
+        // Transaction executes only if all futures return successfully!
         let futureTransaction = conn.transaction(on: .sqlite) { conn -> Future<Void> in
             return Movie.query(on: self.conn).delete().flatMap {
                 return self.getMovies().flatMap { movies in
@@ -51,26 +51,34 @@ final class ServerController {
             self.logger.warning("update: \(error)")
         }
     }
-    
+
     private func getMovies() -> Future<[Movie]> {
-        return forum.getMovies().flatMap { forumMovies in
-            return self.multi.getMovies().map { multiMovies in
-                
-                var movies = forumMovies
-                
-                multiMovies.forEach { multiMovie in
-                    /// If movie with the same title as multiMovie is found in forumMovies...
-                    if let movie = movies.first(where: { $0.originalTitle?.lowercased() == multiMovie.originalTitle?.lowercased() }) {
-                        /// add multiMovie's showings to forumMovie
-                        movie.showings.append(contentsOf: multiMovie.showings)
-                    } else {
-                        /// add multiMovie to forumMovies
-                        movies.append(multiMovie)
-                    }
-                }
-                
-                return movies
+        
+        let forumFutures = forum.getMovies()
+        let multiFutures = multi.getMovies()
+        
+        return forumFutures.and(multiFutures).map { forumMovies, multiMovies in
+            
+            let forumMovies = self.merge(movies: forumMovies)
+            let multiMovies = self.merge(movies: multiMovies)
+            
+            let movies = self.merge(movies: multiMovies, to: forumMovies)
+            
+            return movies
+        }
+    }
+    
+    private func merge(movies: [Movie], to result: [Movie] = [Movie]()) -> [Movie] {
+        var result = result
+        
+        movies.forEach { movie in
+            if let resultMovie = result.first(where: { $0 == movie }) {
+                resultMovie.showings.append(contentsOf: movie.showings)
+            } else {
+                result.append(movie)
             }
         }
+        
+        return result
     }
 }
