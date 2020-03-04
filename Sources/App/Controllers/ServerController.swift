@@ -16,6 +16,7 @@ final class ServerController {
     
     private let forum: ForumCinemas
     private let multi: Multikino
+    private let cinamon: Cinamon
 
     init(on app: Application) throws {
         self.app = app
@@ -24,6 +25,7 @@ final class ServerController {
         
         self.forum = try ForumCinemas(on: app)
         self.multi = try Multikino(on: app)
+        self.cinamon = try Cinamon(on: app)
     }
     
     func start() {
@@ -56,14 +58,24 @@ final class ServerController {
         
         let forumFutures = forum.getMovies()
         let multiFutures = multi.getMovies()
-        
-        return forumFutures.and(multiFutures).map { forumMovies, multiMovies in
-            
+        let cinamonFutures = cinamon.getMovies()
+
+        let forumAndMultiFutures = forumFutures.and(multiFutures).map { forumMovies, multiMovies -> [Movie] in
+            // Removes duplicate movies.
             let forumMovies = self.merge(movies: forumMovies)
             let multiMovies = self.merge(movies: multiMovies)
             
             let movies = self.merge(movies: multiMovies, to: forumMovies)
             
+            return movies
+        }
+
+        return forumAndMultiFutures.and(cinamonFutures).map { forumAndMultiMovies, cinamonMovies in
+            // Removes duplicate movies.
+            let cinamonMovies = self.merge(movies: cinamonMovies)
+
+            let movies = self.merge(movies: cinamonMovies, to: forumAndMultiMovies)
+
             return movies
         }
     }
