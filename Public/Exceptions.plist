@@ -2,10 +2,31 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>Cinamon</key>
+	<dict>
+		<key>title</key>
+		<dict>
+			<key>Baltų gentys. Paskutinieji Europos pagonys</key>
+			<string>Baltų gentys</string>
+		</dict>
+		<key>originalTitle</key>
+		<dict>
+			<key>Baltu Ciltis/Eiropas pēdējie pagāni</key>
+			<string>Baltu Ciltis</string>
+			<key>Emma</key>
+			<string>Emma.</string>
+		</dict>
+	</dict>
 	<key>ForumCinemas</key>
 	<dict>
 		<key>title</key>
 		<dict>
+			<key> Specialus seansas:</key>
+			<string></string>
+			<key> (įgarsinta lietuviškai)</key>
+			<string></string>
+			<key>COSMOPOLITAN kino vakaras: </key>
+			<string></string>
 			<key>Pamatyk pirmas: artėjančio „Kino pavasario“ filmas „Nematomas gyvenimas“</key>
 			<string>Nematomas gyvenimas</string>
 			<key>Japonijos kino festivalis 2020: </key>
@@ -29,6 +50,12 @@
 		</dict>
 		<key>originalTitle</key>
 		<dict>
+			<key>Special screening:</key>
+			<string></string>
+			<key> (Lithuanian voice-over)</key>
+			<string></string>
+			<key>COSMOPOLITAN premiere: </key>
+			<string></string>
 			<key>Japonijos kino festivalis 2020: </key>
 			<string></string>
 			<key>KP20: </key>
