@@ -25,7 +25,7 @@ struct Cinamon: DataExceptionable {
             let cinamonService = try JSONDecoder().decode(CinamonService.self, from: html)
 
             let futureMovies = cinamonService.movies.compactMap { movie in
-                return Movie(from: movie)
+                return Movie(from: movie, on: cinamonService.screens)
             }
 
             return futureMovies.map { self.executeExceptions(on: $0) }
@@ -39,7 +39,7 @@ struct Cinamon: DataExceptionable {
 
 extension Movie {
 
-    fileprivate convenience init?(from movie: CinamonService.CinamonMovie) {
+    fileprivate convenience init?(from movie: CinamonService.CinamonMovie, on screens: [String]) {
 
         guard let year: String = {
             guard let substring = movie.year?.split(separator: "-").first else { return nil }
@@ -56,9 +56,18 @@ extension Movie {
             return [genre]
         }()
 
-        let plot = movie.plot
+        let plot: String? = {
+            guard let plot = movie.plot else { return nil }
+            return plot.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression, range: nil)
+        }()
 
-        let showings = movie.showings.compactMap { Showing(from: $0) }
+        let showings = movie.showings.compactMap { showing -> Showing? in
+            if screens.contains(showing.screen_name) {
+                return Showing(from: showing)
+            } else {
+                return nil
+            }
+        }
 
         self.init(id: nil,
                   title: movie.title,
@@ -86,6 +95,7 @@ extension Showing {
 private struct CinamonService: Decodable {
 
     let movies: [CinamonMovie]
+    let screens: [String]
 
     struct CinamonMovie: Decodable {
         let title: String
@@ -103,6 +113,7 @@ private struct CinamonService: Decodable {
         }
 
         struct CinamonShowing: Decodable {
+            let screen_name: String
             let showtime: String
             let is_3d: Bool
         }
