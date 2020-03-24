@@ -34,7 +34,7 @@ final class ServerController {
     }
     
     private func update() {
-        logger.info("Update is starting!")
+        logger.info("\(Date()): Update is starting!")
     
         // Transaction executes only if all futures return successfully!
         let futureTransaction = conn.transaction(on: .sqlite) { conn -> Future<Void> in
@@ -48,9 +48,9 @@ final class ServerController {
         }
 
         futureTransaction.do { _ in
-            self.logger.info("Update is complete!")
+            self.logger.info("\(Date()): Update is complete!")
         }.catch { error in
-            self.logger.warning("update: \(error)")
+            self.logger.warning("\(Date()): \(error)")
         }
     }
 
