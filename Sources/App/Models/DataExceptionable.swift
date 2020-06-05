@@ -29,6 +29,12 @@ extension DataExceptionable {
                 movie.originalTitle = movie.originalTitle.replacingOccurrences(of: key, with: value)
             }
         }
+
+        if let posterExceptions = exceptions["poster"] as? [String : String] {
+            for (key, value) in posterExceptions {
+                movie.poster = movie.poster?.replacingOccurrences(of: key, with: value)
+            }
+        }
         
         return movie
     }
