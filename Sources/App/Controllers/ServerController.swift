@@ -77,9 +77,10 @@ final class ServerController {
             let movies = self.merge(movies: cinamonMovies, to: forumAndMultiMovies)
 
             var validator = Validator()
-            let validatedMovies = movies.map { validator.setPoster(for: $0) }
+            let validatedPosterMovies = movies.map { validator.setPoster(for: $0) }
+            let validatedPlotMovies = validatedPosterMovies.map { validator.setPlot(for: $0) }
 
-            return validatedMovies
+            return validatedPlotMovies
         }
     }
     
