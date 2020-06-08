@@ -29,6 +29,22 @@ struct Validator {
         return movie
     }
 
+    func setPlot(for movie: Movie) -> Movie {
+        let plist = URL(fileURLWithPath: "\(DirectoryConfig.detect().workDir)Public/Plots.plist")
+        guard let data = try? Data(contentsOf: plist) else { return movie }
+
+        guard let dictionary = try? PropertyListSerialization.propertyList(from: data, options: .mutableContainers, format: .none) as! [String: String]
+            else { return movie }
+
+        guard let key = (dictionary.keys.first { $0 == movie.originalTitle }) else { return movie }
+        guard let plot = dictionary[key] else { return movie }
+
+        movie.plot = plot
+        print(movie.originalTitle)
+
+        return movie
+    }
+
 }
 
 extension URL {
