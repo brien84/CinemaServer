@@ -11,6 +11,7 @@ import Vapor
 struct Validator {
 
     private var baseURL = URL(string: "https://movies.ioys.lt/posters/")
+    //private var baseURL = URL(string: "http://localhost:8080/posters/")
 
     private lazy var posterPaths: [URL]? = {
         let directory = URL(fileURLWithPath: "\(DirectoryConfig.detect().workDir)Public/Posters")
@@ -18,7 +19,7 @@ struct Validator {
     }()
 
     mutating func setPoster(for movie: Movie) -> Movie {
-        if let posterPath = posterPaths?.first(where: { $0.fileNameWithoutExtension == movie.originalTitle }) {
+        if let posterPath = posterPaths?.first(where: { $0.fileNameWithoutExtension.lowercased() == movie.originalTitle.lowercased().replacingOccurrences(of: ":", with: "") }) {
             let url = baseURL?.appendingPathComponent(posterPath.fileNameWithExtension)
             movie.poster = url?.absoluteString
         } else {
